@@ -45,7 +45,9 @@ Design worked out on a diagram first (`../dwelly-history-eda/diagram/`), from a 
 | Invalid model output | Retry once with the zod error; still invalid: `needs_review`, urgency = max(previous, floor, medium) | A bad answer is usually fixed by showing the model the error. After that a person should look; the urgency never drops on a failure. | Fail the event (no record); retry forever |
 | Prompts | Files in `prompts/`, versioned by git; the version is name + content hash, on every `llm.call` trace | Separate from code, reviewable in diffs, any edit is visible in the traces. Old versions stay to compare (`try:classify --prompt classify.v1`). | A prompt server (Langfuse, Phoenix): a runtime dependency on a server for the session |
 | LLM call records | In the traces (`llm.call`: input, raw output, parsed, prompt version, provider, tokens, cost), no table | One place to look; a viewer (Phoenix) can read them later. | A `classifications` table |
-| Out-of-scope cases | `OPEN_CASE_OUT_OF_SCOPE` config (planned with the handler) | Opening a case tells the landlord; the archive records them anyway. | Hard-coded |
+| Out-of-scope cases | `OPEN_CASE_OUT_OF_SCOPE` config, default true. Our own case is always kept; the flag only decides whether rung 3 opens a Dwelly case (`intent.case_open` says `skipped`) | Opening a case tells the landlord; the archive records them anyway (case-11). | Hard-coded |
+| Redelivered events | The handler checks `caseForCause(event_id)` before the LLM call | At-least-once delivery would otherwise pay for a second call and, if the first case had closed, open a duplicate case. The `UNIQUE (case_id, cause_id)` constraint is the second line of defence. | Rely on the constraint alone (costs a call; a closed case means a new case) |
+| Events other than messages | Traced as `event.ignored` | Rungs 3–4 handle `work_order.*`. Ignoring them now keeps the inbox moving. | Fail them (they would pile up as failed) |
 
 ## Open: decide at the rung where it matters
 - **Model for the live session**: keep DeepSeek flash or move up, decided by the eval scores. First runs: ~$0.0003 and ~0.9 s per classify call on DeepInfra fp8.

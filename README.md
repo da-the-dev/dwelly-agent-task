@@ -2,7 +2,7 @@
 
 An agent service for home repairs at Dwelly: it reads tenant messages, judges urgency, opens maintenance cases, books contractors and keeps people informed. Built for the Dwelly AI build session.
 
-Status: **rung 2, in progress.** It reads the event feed into a durable inbox and traces each event. The rung 2 classifier (urgency, next step, safety advice, as versions of our own case) works on archive cases (`npm run try:classify`) but is not wired into the loop yet.
+Status: **rung 2.** It reads the event feed into a durable inbox and classifies each tenant message (urgency, next step, safety advice) into a version of our own case. It does not act in the world yet: what it would do is traced as `intent.*` lines.
 
 ## Run
 ```sh
@@ -21,6 +21,13 @@ npm run build && npm run start:fake                       # terminal 2: .env + .
 ```
 State: `state/fake.db` (SQLite). Traces: `traces/<run>.jsonl`.
 
+All 15 archive openers, about 1 s apart (15 LLM calls, about $0.002):
+```sh
+(cd ../dwelly-fake-world && SCENARIO=archive SPEED=20 npm run dev)   # terminal 1
+rm -f state/fake.db*; npm run build && npm run start:fake           # terminal 2
+sqlite3 state/fake.db "SELECT property_id, version, urgency, next_step, status, waiting_on, why FROM case_versions ORDER BY property_id;"
+```
+
 The fake world keeps its events in memory, so a restarted world counts cursors from 0 again. Delete `state/fake.db*` whenever you restart it, or the agent waits for cursors above its saved one and misses the new events.
 
 ### Debugging in VS Code
@@ -35,6 +42,7 @@ Run and Debug (⇧⌘D) has these configs (`.vscode/launch.json`). Breakpoints g
 |---|---|
 | `src/main.ts` | Entry point: config, store, tracer, loop. |
 | `src/agent/loop.ts` | Poll loop + transactional inbox. |
+| `src/agent/handle.ts` | The per-event handler: message → case → decide → save the version → trace. |
 | `src/agent/decide.ts` | Rung 2 for one message: classify → safety floor → next case version. |
 | `src/agent/classify.ts` | The one LLM call: prompt file, zod-validated output, one retry, `llm.call` traces. |
 | `src/agent/floor.ts` | Safety floor: hazard rules in code set a minimum urgency. |

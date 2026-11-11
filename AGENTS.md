@@ -12,7 +12,7 @@ Dwelly manages rented homes. Build a service that does the property manager's wo
 
 It is a ladder. A working lower rung with tests and traces is worth more than a higher rung held together with tape.
 
-**Current rung: 2 (understand the problem).** Built: the classifier, the safety floor and case versions, tried on archive cases with `npm run try:classify`. Not yet wired into the running loop (next: the message handler). Then rung 3 (create the case).
+**Current rung: 2 (understand the problem), running.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`); what rungs 3 and 5 would do is traced as `intent.*` lines, nothing is sent yet. Next: rung 3 (create the case in Dwelly).
 
 ## Sources of truth
 - `spec/openapi.json`: the API. The world validates requests with it. Do not guess fields; read the spec.
@@ -36,6 +36,7 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `src/agent/loop.ts`: transactional inbox. Fetch, then store the batch and the cursor in one transaction, then handle pending events. Delivery is at-least-once, so **every handler that changes the world must be idempotent**.
 - `src/store/`: state goes only through the async `Store` interface. SQL must run on SQLite and Postgres both.
 - `src/trace.ts`: every decision is one `tracer.trace(kind, {...})` line with the `event_id` it belongs to.
+- `src/agent/handle.ts`: the handler the loop calls per event. A message → find its case (payload case ref, else the open case at the property, else new) → `decide` → save the version → trace `case.version` and the `intent.*` lines. An event that already produced a version is skipped before the LLM call (at-least-once delivery).
 - `src/agent/decide.ts`: rung 2's decision for one message: classify (one LLM call) → safety floor → state. It takes the case's latest version and returns the next one; the caller saves it.
 - `src/case.ts` + `cases` / `case_versions`: a case evolves as versions. The classifier sees only the latest version and the new message (Markov), so the `summary` must carry what matters. Never add a column to `cases` without adding it to `case_versions`.
 - `src/agent/floor.ts`: the safety floor is code, not prompt. The model may raise urgency above it, never lower it. A new hazard rule needs an archive or trap test in `test/floor.test.ts`.
