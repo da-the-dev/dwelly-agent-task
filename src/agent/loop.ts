@@ -8,6 +8,7 @@ import type { WorldEvent } from "../api/types.js";
 import type { Api } from "../api/client.js";
 import type { Store } from "../store/store.js";
 import type { Tracer } from "../trace.js";
+import { describeError } from "../errors.js";
 
 export type EventHandler = (event: WorldEvent) => Promise<void>;
 
@@ -43,7 +44,7 @@ export async function tick({ api, store, tracer, handle, batchSize = 100 }: Loop
     } catch (err) {
       // A poison event must not block the queue: record it and move on. Failed events stay
       // in the inbox for inspection and replay.
-      const message = err instanceof Error ? err.message : String(err);
+      const message = describeError(err);
       await store.mark(event.id, "failed", message);
       tracer.trace("event.failed", { event_id: event.id, error: message });
     }
@@ -65,7 +66,7 @@ export async function runLoop(deps: LoopDeps & { intervalMs: number; signal: Abo
       // Network blip, 5xx, or a malformed body: back off exponentially, capped at 30 s.
       failures++;
       wait = Math.min(intervalMs * 2 ** failures, 30_000);
-      tracer.trace("poll.error", { error: err instanceof Error ? err.message : String(err), failures, retry_in_ms: wait });
+      tracer.trace("poll.error", { error: describeError(err), failures, retry_in_ms: wait });
     }
     await sleep(wait, signal);
   }

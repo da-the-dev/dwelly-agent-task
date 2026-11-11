@@ -38,6 +38,7 @@ Run and Debug (⇧⌘D) has these configs (`.vscode/launch.json`). Breakpoints g
 | `src/api/client.ts` | Dwelly API client (fetch). |
 | `src/llm.ts` | OpenRouter client (fetch). |
 | `src/trace.ts` | JSONL traces. |
+| `src/errors.ts` | `describeError`: one trace line with the cause chain (fetch hides it). |
 | `src/api/schema.d.ts` | Generated from `spec/openapi.json` (`npm run gen:types`). Do not edit. |
 | `spec/openapi.json` | Spec snapshot, 11 Nov 2026 (`npm run fetch:spec` to refresh). |
 | `data/history.json` | The 15-case archive, the answer key for the evals. |
