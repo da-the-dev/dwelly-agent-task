@@ -97,6 +97,8 @@ export function openSqliteStore(path: string): Store {
        ${CASE_COLS.map((c) => `${c} = excluded.${c}`).join(", ")}`,
   );
   const history = db.prepare("SELECT * FROM case_versions WHERE case_id = ? ORDER BY version");
+  const byDwellyId = db.prepare("SELECT * FROM cases WHERE dwelly_case_id = ?");
+  const byCause = db.prepare("SELECT case_id FROM case_versions WHERE cause_id = ? LIMIT 1");
 
   return {
     async getCursor() {
@@ -142,6 +144,14 @@ export function openSqliteStore(path: string): Store {
     async findOpenCase(propertyId: string) {
       const r = findOpenCase.get(propertyId) as Row | undefined;
       return r ? toCase(r, Number(r["version"])) : null;
+    },
+    async findCaseByDwellyId(dwellyCaseId: string) {
+      const r = byDwellyId.get(dwellyCaseId) as Row | undefined;
+      return r ? toCase(r, Number(r["version"])) : null;
+    },
+    async caseForCause(causeId: string) {
+      const r = byCause.get(causeId) as Row | undefined;
+      return r ? String(r["case_id"]) : null;
     },
     async saveCaseVersion(v: CaseVersion) {
       db.exec("BEGIN");

@@ -17,6 +17,11 @@ export interface Config {
   /** SQLite file for agent state (cursor, inbox). */
   stateDb: string;
   pollIntervalMs: number;
+  /**
+   * Open a Dwelly case (rung 3) for an out-of-scope report too. Opening one tells the
+   * landlord; the archive records these cases anyway (case-11), so the default is true.
+   */
+  openCaseOutOfScope: boolean;
   llm: {
     /** OpenRouter key; null means LLM calls are unavailable. */
     apiKey: string | null;
@@ -51,6 +56,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     token,
     stateDb: env["STATE_DB"]?.trim() || "state/agent.db",
     pollIntervalMs: Number(env["POLL_INTERVAL_MS"] ?? 2000),
+    openCaseOutOfScope: !/^(false|0|no)$/i.test(env["OPEN_CASE_OUT_OF_SCOPE"]?.trim() ?? ""),
     llm: {
       apiKey: env["OPENROUTER_API_KEY"]?.trim() || null,
       model: env["LLM_MODEL"]?.trim() || DEFAULT_MODEL,

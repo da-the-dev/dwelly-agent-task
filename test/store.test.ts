@@ -63,6 +63,15 @@ describe("case versions", () => {
     expect(await store.findOpenCase("prop_99")).toBeNull();
   });
 
+  it("finds a case by its Dwelly id, and the case an event already touched", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v({ ...base, dwellyCaseId: "d-42" }, "evt_3", null));
+    expect((await store.findCaseByDwellyId("d-42"))?.id).toBe("case_1");
+    expect(await store.findCaseByDwellyId("d-0")).toBeNull();
+    expect(await store.caseForCause("evt_3")).toBe("case_1");
+    expect(await store.caseForCause("evt_4")).toBeNull();
+  });
+
   it("a version that would reuse a version number fails and leaves the case untouched", async () => {
     const store = openSqliteStore(":memory:");
     await store.saveCaseVersion(v(base, "evt_3", null));

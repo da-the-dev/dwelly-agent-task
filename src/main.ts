@@ -1,5 +1,8 @@
-// The agent service. Rung 1: poll the world's events into the inbox and trace each one.
+// The agent service. Rung 1: poll the world's events into the inbox. Rung 2: classify each
+// message into a version of our own case, and trace what rungs 3 and 5 would do.
 import { createApi } from "./api/client.js";
+import { CLASSIFY_PROMPT, loadPrompt } from "./agent/classify.js";
+import { createHandler } from "./agent/handle.js";
 import { runLoop } from "./agent/loop.js";
 import { loadConfig, maskToken, type Config } from "./config.js";
 import { openSqliteStore } from "./store/sqlite.js";
@@ -16,6 +19,12 @@ if (!config.token) {
   console.error("DWELLY_TOKEN is not set. For the fake world: npm run start:fake");
   process.exit(1);
 }
+if (!config.llm.apiKey) {
+  console.error("OPENROUTER_API_KEY is not set in .env: rung 2 needs it to classify messages.");
+  process.exit(1);
+}
+const llm = { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers };
+const prompt = loadPrompt(CLASSIFY_PROMPT);
 
 const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const tracePath = `traces/${runId}.jsonl`;
@@ -33,6 +42,9 @@ tracer.trace("run.start", {
   trace_file: tracePath,
   cursor: await store.getCursor(),
   model: config.llm.model,
+  providers: config.llm.providers,
+  prompt: prompt.version,
+  open_case_out_of_scope: config.openCaseOutOfScope,
 });
 
 await runLoop({
@@ -41,7 +53,12 @@ await runLoop({
   tracer,
   intervalMs: config.pollIntervalMs,
   signal: stop.signal,
-  // Rung 1 only reads: record what came in. Understanding it is rung 2.
-  handle: async (event) => tracer.trace("event.received", { event_id: event.id, event }),
+  // The raw event is in the inbox; the decision is in the case.version trace line.
+  handle: createHandler({
+    store,
+    tracer,
+    classify: { llm, prompt, tracer },
+    openCaseOutOfScope: config.openCaseOutOfScope,
+  }),
 });
 await store.close();
