@@ -31,7 +31,24 @@ devDependencies: `typescript`, `@types/node`, `vitest`, `openapi-typescript`. Ru
 | Traces | One JSONL file per run in `traces/`, plus stdout. Synchronous append. | `grep`/`jq`-able in the session. The sync write means the line that explains a crash is on disk. | A logging library (pino): faster, but one more dependency |
 | Fake-world state | A separate DB (`state/fake.db`) via `.env.fake` | Fake runs never mix with the real session's state. | — |
 
+## Rung 2: understand the problem (11 Nov)
+Design worked out on a diagram first (`../dwelly-history-eda/diagram/`), from a read of the 15 archive cases.
+
+| Choice | Pick | Why | Other option |
+|---|---|---|---|
+| LLM calls per message | One: classify (`src/agent/classify.ts`) | Which case a message belongs to comes from the payload (case ref, else the open case at the property): a rule, not a model. One call is one prompt, one schema, one eval to tune. | A second "link" call (new problem / update / chit-chat). Dropped while we assume the payload carries what we need; Dwelly was asked on 11 Nov |
+| Payload shape | One adapter, `readMessage` (`src/agent/message.ts`) | `Event.payload` is an open object in the spec. Only this file knows the field names; unknown shapes fail loudly with the payload keys in the trace. | Reading `payload.body` wherever it is needed |
+| Case state | `cases` (latest) + append-only `case_versions` (same real columns), `actors` | Markov: the latest version is all the classifier sees, so `summary` and `open_questions` carry the memory. History is for review and debugging with plain SQL. A version for every event on a case, even with no change; `UNIQUE (case_id, cause_id)` makes a redelivered event a no-op. | An urgency log + facts table (more tables, same information); JSON snapshots (`json_extract` by hand is clumsy); full event sourcing (most code to explain) |
+| Status | Three fields set by code from `next_step`: `status` (Dwelly's own enum), `waiting_on`, `outcome` | `status` can be PATCHed as is; `waiting_on` says who has the next move (follow-ups when people go quiet). The model never sets them. | One detailed enum (grows every rung, needs mapping to Dwelly's) |
+| Trade | Not stored; `contractor_id` instead (rung 4) | Rung 4 works out the trade from the summary when it picks. | A `trade` column |
+| Safety floor | Code rules set a minimum urgency (`src/agent/floor.ts`); the model may raise, never lower | The dangerous cases (gas, water + electrics, burning smell, unsecured home, no heat in the cold, water into another flat) must not depend on a prompt or a model. Deterministic, unit-tested on the archive for free. Over-fires on purpose. | Rules only in the prompt |
+| Invalid model output | Retry once with the zod error; still invalid: `needs_review`, urgency = max(previous, floor, medium) | A bad answer is usually fixed by showing the model the error. After that a person should look; the urgency never drops on a failure. | Fail the event (no record); retry forever |
+| Prompts | Files in `prompts/`, versioned by git; the version is name + content hash, on every `llm.call` trace | Separate from code, reviewable in diffs, any edit is visible in the traces. Old versions stay to compare (`try:classify --prompt classify.v1`). | A prompt server (Langfuse, Phoenix): a runtime dependency on a server for the session |
+| LLM call records | In the traces (`llm.call`: input, raw output, parsed, prompt version, provider, tokens, cost), no table | One place to look; a viewer (Phoenix) can read them later. | A `classifications` table |
+| Out-of-scope cases | `OPEN_CASE_OUT_OF_SCOPE` config (planned with the handler) | Opening a case tells the landlord; the archive records them anyway. | Hard-coded |
+
 ## Open: decide at the rung where it matters
-- **Model for the live session** (rung 2): keep DeepSeek flash or move up, decided by the eval scores. Cost per case to measure on the evals. Note: the smoke call used 375 completion tokens for a ~40-token answer (hidden reasoning tokens?). Check this before trusting the cost estimate.
-- **Invalid LLM output** (rung 2): retry, fall back, or escalate to a human.
+- **Model for the live session**: keep DeepSeek flash or move up, decided by the eval scores. First runs: ~$0.0003 and ~0.9 s per classify call on DeepInfra fp8.
+- **Closing on the first message**: `log_only` / `out_of_scope` close the case at once, so a reply from the tenant starts a new case. Revisit with rung 5 (stay open until we have replied?).
+- **Summary claims actions**: the model sometimes writes "she has been asked to…" before any reply exists. Prompt v2 reduced it; an eval check should catch the rest.
 - **Left out on purpose**: (fill in as we go)

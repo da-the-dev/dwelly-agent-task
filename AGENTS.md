@@ -12,7 +12,7 @@ Dwelly manages rented homes. Build a service that does the property manager's wo
 
 It is a ladder. A working lower rung with tests and traces is worth more than a higher rung held together with tape.
 
-**Current rung: 1 (reading events).** Next: rung 2 (understand the problem).
+**Current rung: 2 (understand the problem).** Built: the classifier, the safety floor and case versions, tried on archive cases with `npm run try:classify`. Not yet wired into the running loop (next: the message handler). Then rung 3 (create the case).
 
 ## Sources of truth
 - `spec/openapi.json`: the API. The world validates requests with it. Do not guess fields; read the spec.
@@ -36,15 +36,21 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `src/agent/loop.ts`: transactional inbox. Fetch, then store the batch and the cursor in one transaction, then handle pending events. Delivery is at-least-once, so **every handler that changes the world must be idempotent**.
 - `src/store/`: state goes only through the async `Store` interface. SQL must run on SQLite and Postgres both.
 - `src/trace.ts`: every decision is one `tracer.trace(kind, {...})` line with the `event_id` it belongs to.
+- `src/agent/decide.ts`: rung 2's decision for one message: classify (one LLM call) → safety floor → state. It takes the case's latest version and returns the next one; the caller saves it.
+- `src/case.ts` + `cases` / `case_versions`: a case evolves as versions. The classifier sees only the latest version and the new message (Markov), so the `summary` must carry what matters. Never add a column to `cases` without adding it to `case_versions`.
+- `src/agent/floor.ts`: the safety floor is code, not prompt. The model may raise urgency above it, never lower it. A new hazard rule needs an archive or trap test in `test/floor.test.ts`.
+- `src/agent/message.ts`: the only code that knows the payload's field names.
+- `prompts/`: one file per prompt version. Change a prompt by adding a new version file and switching `CLASSIFY_PROMPT`; keep the old one so runs can be compared.
 
 ## Running
+- Classifier on real archive cases (costs money, ~$0.0003 a call): `npm run try:classify -- case-05 case-04@6` (`@6` replays the thread up to `messages[6]`).
 - Unit tests: `npm test`. End to end: start `../dwelly-fake-world` (`npm run dev` there), then `npm run build && npm run start:fake` here. Inspect `traces/*.jsonl` and `state/fake.db`.
 
 ## Stack rules
 - Node.js + TypeScript only. `tsc` builds to `dist/`. Tests run with vitest.
 - **No new dependency** without a line in `DECISIONS.md` that says why, and what the built-in option was. Prefer Node built-ins: `fetch`, `node:fs`, `--env-file`.
 - Use the spec types from `src/api/types.ts`. Do not write your own copies of API shapes.
-- LLM calls go through `src/llm.ts` (OpenRouter, plain `fetch`). The model comes from config (`LLM_MODEL`); never hard-code one elsewhere. Unit tests use a fake `fetch`; only `npm run llm:smoke` and evals call the real API, because they cost money.
+- LLM calls go through `src/llm.ts` (OpenRouter, plain `fetch`). The model comes from config (`LLM_MODEL`); never hard-code one elsewhere. The provider is pinned (`LLM_PROVIDERS`, default `deepinfra/fp8`) so runs are comparable. Unit tests use a fake `fetch`; only `npm run llm:smoke` and evals call the real API, because they cost money.
 - No `any`. At a trust boundary (an API response, an LLM output) use `unknown` and validate it.
 
 ## Working rules

@@ -2,7 +2,7 @@
 
 An agent service for home repairs at Dwelly: it reads tenant messages, judges urgency, opens maintenance cases, books contractors and keeps people informed. Built for the Dwelly AI build session.
 
-Status: **rung 1.** It reads the event feed into a durable inbox and traces each event. It does not act on them yet.
+Status: **rung 2, in progress.** It reads the event feed into a durable inbox and traces each event. The rung 2 classifier (urgency, next step, safety advice, as versions of our own case) works on archive cases (`npm run try:classify`) but is not wired into the loop yet.
 
 ## Run
 ```sh
@@ -11,6 +11,7 @@ cp .env.example .env      # put the session token in DWELLY_TOKEN
 npm run dev               # build + start
 npm test                  # vitest
 npm run typecheck         # src and tests
+npm run try:classify      # the classifier on 5 archive cases (real LLM calls, ~$0.002)
 ```
 
 ### Against the local fake world
@@ -34,6 +35,14 @@ Run and Debug (⇧⌘D) has these configs (`.vscode/launch.json`). Breakpoints g
 |---|---|
 | `src/main.ts` | Entry point: config, store, tracer, loop. |
 | `src/agent/loop.ts` | Poll loop + transactional inbox. |
+| `src/agent/decide.ts` | Rung 2 for one message: classify → safety floor → next case version. |
+| `src/agent/classify.ts` | The one LLM call: prompt file, zod-validated output, one retry, `llm.call` traces. |
+| `src/agent/floor.ts` | Safety floor: hazard rules in code set a minimum urgency. |
+| `src/agent/state.ts` | `status` / `waiting_on` / `outcome` from `next_step`. |
+| `src/agent/message.ts` | The payload adapter (the only code that knows its field names). |
+| `src/case.ts` | Our case model; a case evolves as versions (`cases` + `case_versions`). |
+| `prompts/` | Prompt files, one per version (`classify.v2.md` is current). |
+| `src/tools/try-classify.ts` | Run the classifier on archive cases or replay a thread. |
 | `src/store/` | `Store` interface, SQLite adapter, portable `schema.sql`. |
 | `src/api/client.ts` | Dwelly API client (fetch). |
 | `src/llm.ts` | OpenRouter client (fetch). |
