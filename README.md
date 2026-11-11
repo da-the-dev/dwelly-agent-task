@@ -16,7 +16,7 @@ npm run typecheck         # src and tests
 ### Against the local fake world
 ```sh
 (cd ../dwelly-fake-world && npm install && npm run dev)   # terminal 1
-npm run build && npm run start:fake                       # terminal 2: uses .env + .env.fake
+npm run build && npm run start:fake                       # terminal 2: .env + .env.fake; ignores DWELLY_* already in your shell
 ```
 State: `state/fake.db` (SQLite). Traces: `traces/<run>.jsonl`.
 

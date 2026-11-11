@@ -17,7 +17,7 @@
     "gen:types": "openapi-typescript spec/openapi.json -o src/api/schema.d.ts",
     "fetch:spec": "curl -fsS https://167.172.96.156.sslip.io/openapi.json -o spec/openapi.json && curl -fsS https://167.172.96.156.sslip.io/history.json -o data/history.json",
     "llm:smoke": "npm run -s build && node --env-file=.env dist/tools/llm-smoke.js",
-    "start:fake": "node --env-file=.env --env-file=.env.fake dist/main.js"
+    "start:fake": "env -u DWELLY_BASE_URL -u DWELLY_TOKEN -u STATE_DB node --env-file=.env --env-file=.env.fake dist/main.js"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
