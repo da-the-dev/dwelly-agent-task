@@ -1,0 +1,56 @@
+{
+  // Debug configs. Breakpoints go in src/*.ts; tsc source maps bind them to dist/*.js.
+  // The fake world lives in the sibling repo ../dwelly-fake-world.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Agent → fake world",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/dist/main.js",
+      "runtimeArgs": ["--env-file=.env", "--env-file=.env.fake"],
+      "preLaunchTask": "build agent",
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Fake world",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/../dwelly-fake-world",
+      "program": "${workspaceFolder}/../dwelly-fake-world/dist/main.js",
+      "env": { "SCENARIO": "smoke", "SPEED": "1" },
+      "preLaunchTask": "build fake world",
+      "outFiles": ["${workspaceFolder}/../dwelly-fake-world/dist/**/*.js"],
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Vitest: current file",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      // The world keeps its events in memory, so a new world starts at cursor 0 again.
+      // This run therefore also wipes the agent's state/fake.db; otherwise the agent
+      // would wait for cursors above the old saved one and miss the new events.
+      "name": "E2E: fake world + agent (fresh state)",
+      "configurations": ["Fake world", "Agent → fake world"],
+      "preLaunchTask": "prepare e2e",
+      "stopAll": true
+    }
+  ]
+}

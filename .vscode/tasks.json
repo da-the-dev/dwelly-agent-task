@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build agent",
+      "type": "shell",
+      "command": "npm run -s build",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$tsc",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "build fake world",
+      "type": "shell",
+      "command": "npm run -s build",
+      "options": { "cwd": "${workspaceFolder}/../dwelly-fake-world" },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "reset fake state",
+      "type": "shell",
+      "command": "rm -f state/fake.db state/fake.db-wal state/fake.db-shm",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "prepare e2e",
+      "dependsOn": ["build agent", "build fake world", "reset fake state"],
+      "problemMatcher": []
+    }
+  ]
+}

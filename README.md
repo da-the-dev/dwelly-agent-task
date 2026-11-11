@@ -20,6 +20,15 @@ npm run build && npm run start:fake                       # terminal 2: uses .en
 ```
 State: `state/fake.db` (SQLite). Traces: `traces/<run>.jsonl`.
 
+The fake world keeps its events in memory, so a restarted world counts cursors from 0 again. Delete `state/fake.db*` whenever you restart it, or the agent waits for cursors above its saved one and misses the new events.
+
+### Debugging in VS Code
+Run and Debug (⇧⌘D) has these configs (`.vscode/launch.json`). Breakpoints go in `src/*.ts`.
+- **E2E: fake world + agent (fresh state)**: builds both, wipes `state/fake.db`, starts both under the debugger. Stop stops both.
+- **Agent → fake world**: the agent alone, keeping its state (use it to test restart and resume).
+- **Fake world**: the world alone (scenario `smoke`).
+- **Vitest: current file**: debug the open test file.
+
 ## Layout
 | Path | What |
 |---|---|
