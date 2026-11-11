@@ -1,0 +1,27 @@
+{
+  "name": "dwelly-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Maintenance agent for the Dwelly AI build session",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node --env-file=.env dist/main.js",
+    "dev": "npm run build && npm start",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "gen:types": "openapi-typescript spec/openapi.json -o src/api/schema.d.ts",
+    "fetch:spec": "curl -fsS https://167.172.96.156.sslip.io/openapi.json -o spec/openapi.json && curl -fsS https://167.172.96.156.sslip.io/history.json -o data/history.json",
+    "llm:smoke": "npm run -s build && node --env-file=.env dist/tools/llm-smoke.js"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}
