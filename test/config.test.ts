@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_MODEL, loadConfig, maskToken } from "../src/config.js";
+import { DEFAULT_MODEL, FAKE_TOKEN, loadConfig, maskToken } from "../src/config.js";
 
 describe("loadConfig", () => {
   it("rejects a missing base URL", () => {
@@ -21,6 +21,12 @@ describe("loadConfig", () => {
       pollIntervalMs: 2000,
       llm: { apiKey: null, model: DEFAULT_MODEL },
     });
+  });
+  it("refuses the fake world's token for any address but this machine (found in a live run)", () => {
+    expect(() => loadConfig({ DWELLY_BASE_URL: "https://167.172.96.156.sslip.io", DWELLY_TOKEN: FAKE_TOKEN })).toThrow(
+      /fake world's token.*env \| grep DWELLY_/,
+    );
+    expect(loadConfig({ DWELLY_BASE_URL: "http://127.0.0.1:8787", DWELLY_TOKEN: FAKE_TOKEN }).token).toBe(FAKE_TOKEN);
   });
   it("lets LLM_MODEL override the default model", () => {
     expect(loadConfig({ DWELLY_BASE_URL: "https://x", LLM_MODEL: "a/b" }).llm.model).toBe("a/b");

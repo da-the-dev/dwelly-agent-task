@@ -1,11 +1,17 @@
 // The agent service. Rung 1: poll the world's events into the inbox and trace each one.
 import { createApi } from "./api/client.js";
 import { runLoop } from "./agent/loop.js";
-import { loadConfig, maskToken } from "./config.js";
+import { loadConfig, maskToken, type Config } from "./config.js";
 import { openSqliteStore } from "./store/sqlite.js";
 import { createTracer, fileSink } from "./trace.js";
 
-const config = loadConfig();
+let config: Config;
+try {
+  config = loadConfig();
+} catch (err) {
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exit(1);
+}
 if (!config.token) {
   console.error("DWELLY_TOKEN is not set. For the fake world: npm run start:fake");
   process.exit(1);
