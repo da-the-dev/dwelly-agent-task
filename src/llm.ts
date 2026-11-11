@@ -5,6 +5,12 @@
 export interface LlmConfig {
   apiKey: string;
   model: string;
+  /**
+   * OpenRouter provider endpoints to use, in order, with no fallback to others
+   * (e.g. ["deepinfra/fp8"]). Different providers serve different quantizations of the
+   * same model, so an unpinned run is not comparable with the last one. Empty: any provider.
+   */
+  providers?: string[];
   baseUrl?: string;
 }
 
@@ -62,14 +68,20 @@ export async function chat(
     usage: { include: true },
   };
   if (req.maxTokens !== undefined) body["max_tokens"] = req.maxTokens;
+  const provider: Record<string, unknown> = {};
   if (req.jsonSchema) {
     body["response_format"] = {
       type: "json_schema",
       json_schema: { name: req.jsonSchema.name, strict: true, schema: req.jsonSchema.schema },
     };
     // Only route to providers that honour response_format; otherwise the schema is silently ignored.
-    body["provider"] = { require_parameters: true };
+    provider["require_parameters"] = true;
   }
+  if (cfg.providers?.length) {
+    provider["order"] = cfg.providers;
+    provider["allow_fallbacks"] = false;
+  }
+  if (Object.keys(provider).length) body["provider"] = provider;
 
   const started = performance.now();
   const res = await fetchImpl(`${cfg.baseUrl ?? DEFAULT_BASE_URL}/chat/completions`, {

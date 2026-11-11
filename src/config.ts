@@ -1,4 +1,11 @@
 export const DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash-1017";
+/**
+ * OpenRouter endpoint(s) for DEFAULT_MODEL, no fallback. DeepInfra fp8, standard tier: a
+ * known quantization, strict structured outputs, among the cheapest ($0.098 in / $0.294
+ * out per 1M tokens on 11 Nov 2026). Unpinned, calls were spread over 5 providers with
+ * different quantizations. Override with LLM_PROVIDERS (comma-separated; "any" = unpinned).
+ */
+export const DEFAULT_PROVIDERS = ["deepinfra/fp8"];
 /** The token the local fake world accepts (.env.fake). Never valid on a real server. */
 export const FAKE_TOKEN = "fake-token";
 const LOCAL_HTTP = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/;
@@ -15,6 +22,8 @@ export interface Config {
     apiKey: string | null;
     /** OpenRouter model id. Pin a dated snapshot so eval runs are comparable. */
     model: string;
+    /** OpenRouter provider endpoints, in order, no fallback. Empty: any provider. */
+    providers: string[];
   };
 }
 
@@ -45,8 +54,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     llm: {
       apiKey: env["OPENROUTER_API_KEY"]?.trim() || null,
       model: env["LLM_MODEL"]?.trim() || DEFAULT_MODEL,
+      providers: parseProviders(env["LLM_PROVIDERS"]),
     },
   };
+}
+
+function parseProviders(raw: string | undefined): string[] {
+  const v = raw?.trim();
+  if (!v) return [...DEFAULT_PROVIDERS];
+  if (v === "any") return [];
+  return v.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
 export function maskToken(token: string | null): string {

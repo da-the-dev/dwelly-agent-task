@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_MODEL, FAKE_TOKEN, loadConfig, maskToken } from "../src/config.js";
+import { DEFAULT_MODEL, DEFAULT_PROVIDERS, FAKE_TOKEN, loadConfig, maskToken } from "../src/config.js";
 
 describe("loadConfig", () => {
   it("rejects a missing base URL", () => {
@@ -19,8 +19,14 @@ describe("loadConfig", () => {
       token: null,
       stateDb: "state/agent.db",
       pollIntervalMs: 2000,
-      llm: { apiKey: null, model: DEFAULT_MODEL },
+      llm: { apiKey: null, model: DEFAULT_MODEL, providers: DEFAULT_PROVIDERS },
     });
+  });
+  it("pins the LLM provider by default; LLM_PROVIDERS overrides it, 'any' unpins", () => {
+    const providers = (v?: string) => loadConfig({ DWELLY_BASE_URL: "https://x", LLM_PROVIDERS: v }).llm.providers;
+    expect(providers()).toEqual(["deepinfra/fp8"]);
+    expect(providers("a/fp8, b")).toEqual(["a/fp8", "b"]);
+    expect(providers("any")).toEqual([]);
   });
   it("refuses the fake world's token for any address but this machine (found in a live run)", () => {
     expect(() => loadConfig({ DWELLY_BASE_URL: "https://167.172.96.156.sslip.io", DWELLY_TOKEN: FAKE_TOKEN })).toThrow(

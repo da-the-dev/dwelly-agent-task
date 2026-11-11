@@ -31,6 +31,16 @@ describe("chat", () => {
     expect(sent.temperature).toBe(0);
   });
 
+  it("pins the provider endpoints, with no fallback to others", async () => {
+    const f = fakeFetch(200, ok);
+    await chat({ ...cfg, providers: ["deepinfra/fp8"] }, { messages: [], jsonSchema: { name: "t", schema: {} } }, f.impl);
+    expect(JSON.parse(String(f.calls[0]?.init.body)).provider).toEqual({
+      require_parameters: true,
+      order: ["deepinfra/fp8"],
+      allow_fallbacks: false,
+    });
+  });
+
   it("returns text, served model, usage and cost for the trace", async () => {
     const r = await chat(cfg, { messages: [{ role: "user", content: "hi" }] }, fakeFetch(200, ok).impl);
     expect(r).toMatchObject({ text: '{"a":1}', model: "deepseek/x-served", provider: "DeepSeek", finishReason: "stop" });
