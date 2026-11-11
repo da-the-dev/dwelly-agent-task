@@ -8,10 +8,17 @@ describe("loadConfig", () => {
   it("rejects plain http (the spec's servers entry says http; the world is https)", () => {
     expect(() => loadConfig({ DWELLY_BASE_URL: "http://x" })).toThrow(/https/);
   });
+  it("allows plain http only to this machine (the fake world)", () => {
+    expect(loadConfig({ DWELLY_BASE_URL: "http://127.0.0.1:8787" }).baseUrl).toBe("http://127.0.0.1:8787");
+    expect(loadConfig({ DWELLY_BASE_URL: "http://localhost:8787/" }).baseUrl).toBe("http://localhost:8787");
+    expect(() => loadConfig({ DWELLY_BASE_URL: "http://localhost.evil.com" })).toThrow(/https/);
+  });
   it("treats an empty token as missing and trims the trailing slash", () => {
     expect(loadConfig({ DWELLY_BASE_URL: "https://x/", DWELLY_TOKEN: " " })).toEqual({
       baseUrl: "https://x",
       token: null,
+      stateDb: "state/agent.db",
+      pollIntervalMs: 2000,
       llm: { apiKey: null, model: DEFAULT_MODEL },
     });
   });

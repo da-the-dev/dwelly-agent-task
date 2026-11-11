@@ -12,7 +12,7 @@ Dwelly manages rented homes. Build a service that does the property manager's wo
 
 It is a ladder. A working lower rung with tests and traces is worth more than a higher rung held together with tape.
 
-**Current rung: 0 (scaffold).** Next: rung 1.
+**Current rung: 1 (reading events).** Next: rung 2 (understand the problem).
 
 ## Sources of truth
 - `spec/openapi.json`: the API. The world validates requests with it. Do not guess fields; read the spec.
@@ -31,6 +31,14 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `429` = too many world-changing calls in one minute (reads are not limited). `403` = the session ended (reads still work).
 - Every message gets a reply in the event feed.
 - The spec's `servers` entry says `http://`. Use `https://`.
+
+## Architecture (keep it this way unless DECISIONS.md says otherwise)
+- `src/agent/loop.ts`: transactional inbox. Fetch, then store the batch and the cursor in one transaction, then handle pending events. Delivery is at-least-once, so **every handler that changes the world must be idempotent**.
+- `src/store/`: state goes only through the async `Store` interface. SQL must run on SQLite and Postgres both.
+- `src/trace.ts`: every decision is one `tracer.trace(kind, {...})` line with the `event_id` it belongs to.
+
+## Running
+- Unit tests: `npm test`. End to end: start `../dwelly-fake-world` (`npm run dev` there), then `npm run build && npm run start:fake` here. Inspect `traces/*.jsonl` and `state/fake.db`.
 
 ## Stack rules
 - Node.js + TypeScript only. `tsc` builds to `dist/`. Tests run with vitest.
