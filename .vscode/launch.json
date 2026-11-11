@@ -9,12 +9,15 @@
       "request": "launch",
       "cwd": "${workspaceFolder}",
       "program": "${workspaceFolder}/dist/main.js",
-      "runtimeArgs": ["--env-file=.env", "--env-file=.env.fake"],
+      // .env gives the OpenRouter key. envFile applies .env.fake on top of whatever
+      // VS Code inherited: node's --env-file never overrides a variable that is already set.
+      "runtimeArgs": ["--env-file=.env"],
+      "envFile": "${workspaceFolder}/.env.fake",
       "preLaunchTask": "build agent",
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "sourceMaps": true,
       "skipFiles": ["<node_internals>/**"],
-      "console": "integratedTerminal"
+      "console": "internalConsole"
     },
     {
       "name": "Fake world",
@@ -27,7 +30,7 @@
       "outFiles": ["${workspaceFolder}/../dwelly-fake-world/dist/**/*.js"],
       "sourceMaps": true,
       "skipFiles": ["<node_internals>/**"],
-      "console": "integratedTerminal"
+      "console": "internalConsole"
     },
     {
       "name": "Vitest: current file",
@@ -39,7 +42,7 @@
       "autoAttachChildProcesses": true,
       "smartStep": true,
       "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-      "console": "integratedTerminal"
+      "console": "internalConsole"
     }
   ],
   "compounds": [
