@@ -10,7 +10,7 @@ One line for each choice: what, why, and what the other option was. "The agent p
 | TypeScript version | 5.9.3, pinned | `openapi-typescript` needs the TS 5 compiler API (peer `^5.x`). TS 7 (the native port) has no such API. | TS 7: faster `tsc`, but it breaks type generation |
 | Test runner | vitest | Compiles TS itself, so tests do not need a build. Watch mode and readable diffs. | `node:test`: zero dependencies, but with native type stripping our `./x.js` imports (required by the `tsc` build) do not resolve to `.ts` files, so tests would need a build first |
 | API types | `openapi-typescript` (dev only) | Types are generated from the spec that the world validates with, so they cannot drift. Erased at build: zero runtime cost. | Hand-written types or zod schemas: they can drift |
-| Schema validator | zod v4, **added at rung 2** | One schema gives the runtime check of the LLM output, the TS type and the JSON Schema for structured output. Not installed until code uses it. | Hand-written guards |
+| Schema validator | zod 4.6.7 (pinned; added at rung 2, the first code that needs it) | One schema gives the runtime check of the LLM output, the TS type, and (`z.toJSONSchema`) the strict JSON Schema we send as `response_format`, so the three cannot drift. `z.strictObject` emits `additionalProperties: false` with every key required, which strict mode needs. The only runtime dependency. | Hand-written guards plus a hand-written JSON Schema (two copies of one shape) |
 | HTTP | global `fetch` | Built in. 8 endpoints do not need a client library. | axios / generated client |
 | Config | `node --env-file=.env` | Built in. | dotenv |
 | LLM gateway | OpenRouter | One key, many models: we can swap the model with `LLM_MODEL` and compare eval scores without code changes. | A direct provider API (one vendor, one SDK) |
@@ -18,7 +18,7 @@ One line for each choice: what, why, and what the other option was. "The agent p
 | Model (dev/eval) | `deepseek/deepseek-v4.1-flash-1017` | A dated snapshot, so eval runs are comparable (not a `~latest` alias). Cheapest option with structured outputs. Smoke call: ~$0.0003, 1.8 s. | Change it for the live run if the evals say so |
 | Package manager | npm, exact versions | Ships with Node. Exact versions mean the clean clone on 17 Nov installs what was tested. | pnpm |
 
-devDependencies: `typescript`, `@types/node`, `vitest`, `openapi-typescript`. Runtime dependencies: none (yet).
+devDependencies: `typescript`, `@types/node`, `vitest`, `openapi-typescript`. Runtime dependencies: `zod`.
 
 ## Rung 1: reading events (11 Nov)
 | Choice | Pick | Why | Other option |
