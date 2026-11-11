@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import type { HistoryCase, HistoryCasesResponse } from "../api/types.js";
 import type { CaseRecord } from "../case.js";
 import { loadConfig } from "../config.js";
-import { loadPrompt } from "../agent/classify.js";
+import { CLASSIFY_PROMPT, loadPrompt } from "../agent/classify.js";
 import { decide } from "../agent/decide.js";
 import type { IncomingMessage } from "../agent/message.js";
 import { createTracer, fileSink } from "../trace.js";
@@ -22,13 +22,16 @@ const archive = (JSON.parse(readFileSync("data/history.json", "utf8")) as Histor
 const runId = `try-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const tracePath = `traces/${runId}.jsonl`;
 const tracer = createTracer(runId, fileSink(tracePath));
-const prompt = loadPrompt("classify.v1");
-const deps = { llm: { apiKey: config.llm.apiKey, model: config.llm.model }, prompt, tracer };
+// --prompt classify.v1 runs an older prompt, to compare versions on the same cases.
+const argv = process.argv.slice(2);
+const promptAt = argv.indexOf("--prompt");
+const prompt = loadPrompt(promptAt >= 0 ? argv.splice(promptAt, 2)[1] ?? CLASSIFY_PROMPT : CLASSIFY_PROMPT);
+const deps = { llm: { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers }, prompt, tracer };
 
-const args = process.argv.slice(2);
+const args = argv;
 const specs = args.length ? args : ["case-05", "case-11", "case-03", "case-14", "case-04@6"];
 
-console.log(`model ${config.llm.model}, prompt ${prompt.version}, traces ${tracePath}\n`);
+console.log(`model ${config.llm.model} via ${config.llm.providers.join(",") || "any provider"}, prompt ${prompt.version}, traces ${tracePath}\n`);
 
 for (const spec of specs) {
   const [id, upTo] = spec.split("@");
@@ -67,9 +70,10 @@ for (const spec of specs) {
   console.log();
 }
 
-const calls = readFileSync(tracePath, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { cost_usd?: number | null; latency_ms?: number });
+const calls = readFileSync(tracePath, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { cost_usd?: number | null; latency_ms?: number; provider?: string });
 const cost = calls.reduce((s, l) => s + (l.cost_usd ?? 0), 0);
-console.log(`${calls.length} LLM calls, $${cost.toFixed(5)}, avg ${Math.round(calls.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / calls.length)} ms`);
+const served = [...new Set(calls.map((l) => l.provider))].join(", ");
+console.log(`${calls.length} LLM calls via ${served}, $${cost.toFixed(5)}, avg ${Math.round(calls.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / calls.length)} ms`);
 
 /** Indices of every message not written by the manager, up to and including `last`. */
 function threadUpTo(c: HistoryCase, last: number): number[] {

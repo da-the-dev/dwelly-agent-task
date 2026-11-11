@@ -31,6 +31,9 @@ export function classificationJsonSchema(): Record<string, unknown> {
   return schema;
 }
 
+/** The prompt the agent uses. Older versions stay in prompts/ so runs can be compared. */
+export const CLASSIFY_PROMPT = "classify.v2";
+
 export interface Prompt {
   name: string;
   /** name@sha256-prefix of the file content: any edit is a new version in the traces. */

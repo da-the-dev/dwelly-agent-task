@@ -1,6 +1,6 @@
 // The classifier against a fake OpenRouter: validation, retry, fallback, trace lines.
 import { describe, expect, it } from "vitest";
-import { classificationJsonSchema, classify, loadPrompt, modelInput } from "../src/agent/classify.js";
+import { CLASSIFY_PROMPT, classificationJsonSchema, classify, loadPrompt, modelInput } from "../src/agent/classify.js";
 import type { IncomingMessage } from "../src/agent/message.js";
 import { createTracer } from "../src/trace.js";
 
@@ -42,7 +42,7 @@ function setup(...contents: string[]) {
   const fake = openRouter(...contents);
   const lines: Record<string, unknown>[] = [];
   const tracer = createTracer("t", (l) => lines.push(JSON.parse(l)));
-  const deps = { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt("classify.v1"), tracer, fetchImpl: fake.impl };
+  const deps = { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(CLASSIFY_PROMPT), tracer, fetchImpl: fake.impl };
   return { deps, fake, lines };
 }
 
@@ -54,7 +54,7 @@ describe("classify", () => {
     expect(fake.bodies).toHaveLength(1);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatchObject({ kind: "llm.call", event_id: "evt_5", attempt: 1, prompt: deps.prompt.version, model: "m-served", error: null });
-    expect(deps.prompt.version).toMatch(/^classify\.v1@[0-9a-f]{12}$/);
+    expect(deps.prompt.version).toMatch(/^classify\.v\d+@[0-9a-f]{12}$/);
   });
 
   it("retries once with the validation error, then accepts", async () => {
