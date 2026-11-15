@@ -9,13 +9,13 @@ import type { CaseRecord } from "../case.js";
 import { describeError } from "../errors.js";
 import { structuredCall, type StructuredDeps } from "./llm-call.js";
 import type { IncomingMessage } from "./message.js";
-import { finalBody, PHONE, safetyLine, subjectFor, templateReply, withoutPhoneNumbers, type Recipient } from "./speak.js";
+import { finalBody, hasPhoneNumber, safetyLine, subjectFor, templateReply, withoutPhoneNumbers, type Recipient } from "./speak.js";
 
 /** The prompt the writer uses. Older versions stay in prompts/ so runs can be compared. */
 export const REPLY_PROMPT = "reply.v3";
 
 export const Reply = z.strictObject({
-  body: z.string().refine((b) => !PHONE.test(b), "the body must not contain a phone number: code adds the only number"),
+  body: z.string().refine((b) => !hasPhoneNumber(b), "the body must not contain a phone number: code adds the only number"),
 });
 
 export interface WriterDeps extends StructuredDeps {

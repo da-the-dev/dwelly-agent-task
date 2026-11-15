@@ -96,16 +96,27 @@ export function safetyLine(c: Pick<CaseRecord, "urgency" | "status">, emergencyN
 }
 
 /**
- * A phone number other than a short emergency code (999, 112): 8+ digits and spaces. Only
- * code puts a number in a message (the safety line), so the model's text must have none.
- * Found in a try run on 15 Nov: the writer copied the gas line (0800 111 999) from the case.
+ * A phone number other than a short emergency code (999, 112): 8 or more digits, whatever
+ * separates them (spaces, hyphens, dots, brackets, a leading +). Only code puts a number in
+ * a message (the safety line), so the model's text must have none. This checks the FORMAT
+ * of our own output, which a pattern can do; it is not perception (DECISIONS.md, regex
+ * policy). Found on 15 Nov (the writer copied the gas line, 0800 111 999) and widened on
+ * 16 Nov (a review: 0800-111-999 got through).
  */
-export const PHONE = /\+?\d[\d ]{6,}\d/;
+const NUMBER_RUN = /\+?\(?\d[\d\s\-.()]*\d/g;
+const PHONE_DIGITS = 8;
+
+export function hasPhoneNumber(text: string): boolean {
+  for (const m of text.matchAll(NUMBER_RUN)) {
+    if (m[0].replace(/\D/g, "").length >= PHONE_DIGITS) return true;
+  }
+  return false;
+}
 
 /** Drop every sentence that holds a phone number; null when nothing is left. */
 export function withoutPhoneNumbers(text: string | null): string | null {
   if (!text) return null;
-  const kept = text.split(/(?<=[.!?])\s+/).filter((s) => !PHONE.test(s)).join(" ").trim();
+  const kept = text.split(/(?<=[.!?])\s+/).filter((s) => !hasPhoneNumber(s)).join(" ").trim();
   return kept || null;
 }
 

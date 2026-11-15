@@ -1,7 +1,7 @@
 // Rung 5: when we write, to whom, and the parts code writes (never the model).
 import { describe, expect, it } from "vitest";
 import type { CaseRecord } from "../src/case.js";
-import { finalBody, looping, withoutPhoneNumbers, safetyLine, speakFor, subjectFor, templateReply, type PastTurn } from "../src/agent/speak.js";
+import { finalBody, hasPhoneNumber, looping, withoutPhoneNumbers, safetyLine, speakFor, subjectFor, templateReply, type PastTurn } from "../src/agent/speak.js";
 
 const c: CaseRecord = {
   id: "case_1",
@@ -108,6 +108,16 @@ describe("the parts code writes", () => {
         "To work out the right next step, we need a few details from you.\n\nCould you tell us:\n- Is it the hot or the cold side?",
     );
     expect(templateReply({ to: "l", role: "landlord", name: null, reasons: ["asked"] }, c, null)).toMatch(/^Hello,/);
+  });
+
+  it("phone numbers are found whatever the separators; short numbers, times and prices are not (review 16 Nov)", () => {
+    for (const t of ["0800 111 999", "0800-111-999", "0800.111.999", "(0800) 111999", "+44 20 7946 0000", "+44-20-7946-0000", "08001119999"]) {
+      expect(hasPhoneNumber(`Call ${t} now.`), t).toBe(true);
+    }
+    for (const t of ["Call 999 now.", "We will come at 10:30.", "It costs £150.", "Flat 12, 3rd floor.", "Within 72 hours."]) {
+      expect(hasPhoneNumber(t), t).toBe(false);
+    }
+    expect(withoutPhoneNumbers("Leave now. Call 0800-111-999 from outside.")).toBe("Leave now.");
   });
 
   it("phone numbers: sentences with one are dropped; the short emergency code is not a phone number", () => {
