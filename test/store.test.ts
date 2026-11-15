@@ -128,6 +128,17 @@ describe("outbox actions (rung 3)", () => {
     expect((await store.actionsForCase("case_1"))[0]?.status).toBe("pending");
   });
 
+  it("read-only views for reports: every case, every action, inbox counts by status", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v(base, "evt_3", null), [open, close]);
+    const other: CaseRecord = { ...base, id: "case_2", propertyId: "prop_03", createdAt: "2026-11-11T12:00:00.000Z" };
+    await store.saveCaseVersion(v(other, "evt_4", null));
+    await store.markAction("act_1", { status: "sent", resultId: "d-1" });
+    expect((await store.allCases()).map((c) => c.id)).toEqual(["case_1", "case_2"]);
+    expect((await store.allActions()).map((a) => [a.id, a.status])).toEqual([["act_1", "sent"], ["act_2", "pending"]]);
+    expect(await store.inboxCounts()).toEqual({ pending: 0, done: 0, failed: 0 });
+  });
+
   it("after a crash mid-call: a POST becomes unknown, a PATCH goes back to pending", async () => {
     const store = openSqliteStore(":memory:");
     await store.saveCaseVersion(v(base, "evt_3", null), [open, close]);
