@@ -12,7 +12,7 @@ Dwelly manages rented homes. Build a service that does the property manager's wo
 
 It is a ladder. A working lower rung with tests and traces is worth more than a higher rung held together with tape.
 
-**Current rung: 3 (create the case in Dwelly), scaffolded on branch `rung3`.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`) plus the `POST`/`PATCH /cases` calls it needs, queued in an outbox and sent after each batch (`src/agent/sender.ts`). What rung 5 would say is traced as `intent.message_tenant`. Next: rung 4 (contractor and work order).
+**Current rung: 3 (create the case in Dwelly), built and merged 15 Nov.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`) plus the `POST`/`PATCH /cases` calls it needs, queued in an outbox and sent after each batch (`src/agent/sender.ts`). What rung 5 would say is traced as `intent.message_tenant`. Next: rung 4 (contractor and work order).
 
 ## Sources of truth
 - `spec/openapi.json`: the API. The world validates requests with it. Do not guess fields; read the spec.
@@ -46,7 +46,8 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `prompts/`: one file per prompt version. Change a prompt by adding a new version file and switching `CLASSIFY_PROMPT`; keep the old one so runs can be compared.
 
 ## Running
-- Classifier on real archive cases (costs money, ~$0.0003 a call): `npm run try:classify -- case-05 case-04@6` (`@6` replays the thread up to `messages[6]`).
+- Evals (cost money, ~$0.012 a full run): `npm run eval`. Options: `--runs 1 --only case-05,calm-gas`, `--prompt classify.v1`, `LLM_MODEL=... LLM_PROVIDERS=any`. Read the table, then commit the report in `evals/runs/`. Change the prompt or the model only with an eval run before and after. A bug found live becomes an item in `evals/cases.json`.
+- Classifier on real archive cases, to read the full output by eye: `npm run try:classify -- case-05 case-04@6` (`@6` replays the thread up to `messages[6]`).
 - Unit tests: `npm test`. End to end: start `../dwelly-fake-world` (`npm run dev` there), then `npm run build && npm run start:fake` here. Inspect `traces/*.jsonl` and `state/fake.db`. The 15 archive openers in ~15 s: `SCENARIO=archive SPEED=20 node dist/main.js` in the fake world; its `GET /_admin/state` lists the cases it received.
 
 ## Stack rules

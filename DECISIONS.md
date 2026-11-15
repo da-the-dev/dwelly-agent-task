@@ -48,6 +48,7 @@ Design worked out on a diagram first (`../dwelly-history-eda/diagram/`), from a 
 | Out-of-scope cases | `OPEN_CASE_OUT_OF_SCOPE` config, default true. Our own case is always kept; the flag only decides whether rung 3 opens a Dwelly case (`intent.case_open` says `skipped`) | Opening a case tells the landlord; the archive records them anyway (case-11). | Hard-coded |
 | Redelivered events | The handler checks `caseForCause(event_id)` before the LLM call | At-least-once delivery would otherwise pay for a second call and, if the first case had closed, open a duplicate case. The `UNIQUE (case_id, cause_id)` constraint is the second line of defence. | Rely on the constraint alone (costs a call; a closed case means a new case) |
 | Events other than messages | Traced as `event.ignored` | Rungs 3–4 handle `work_order.*`. Ignoring them now keeps the inbox moving. | Fail them (they would pile up as failed) |
+| Evals (15 Nov) | `npm run eval` (not in `npm test`): `evals/cases.json` = the 15 archive first messages, case 04 up to `messages[6]`, 6 hand-written tone flips. Each runs 3 times through `decide` (the agent's own path: classify → floor → state), scored on the last step: urgency and next_step against accepted sets. A critical item (lowest accepted urgency high+) rated lower is a hard fail (exit 1). Also counted: how often the floor had to save the model, invalid outputs, summaries that claim an action. Reports go to `evals/runs/` and are committed | The evidence for model and prompt choices. Scoring is pure and unit-tested. | LLM-as-judge (cost, and a second model to trust); one run per item (hides variance) |
 
 ## Rung 3: create the case in Dwelly (15 Nov)
 Design drawn first (`../dwelly-history-eda/diagram/rung3.elements.json`). The four open questions there were decided with my recommended defaults, for review.
@@ -66,9 +67,9 @@ Design drawn first (`../dwelly-history-eda/diagram/rung3.elements.json`). The fo
 | World echo events | `case.created` / `case.updated` stay `event.ignored` | Our own calls echoed back; nothing to decide. | Use them to confirm unknown POSTs (later) |
 
 ## Open: decide at the rung where it matters
-- **Model for the live session**: keep DeepSeek flash or move up, decided by the eval scores. First runs: ~$0.0003 and ~0.9 s per classify call on DeepInfra fp8.
+- **Model for the live session**: DeepSeek flash (`deepseek/deepseek-v4.1-flash-1017`, DeepInfra fp8) unless something new fails. First eval (15 Nov, prompt v2): 66/66 urgency and next_step, 0 hard fails, the floor never had to step in, $0.012 for 75 calls, ~1.1 s a call. The limit: v2 was tuned while reading these archive cases, so they measure fit, not generalisation; the 6 tone flips are the only held-out items. Every live surprise becomes a new eval item.
 - **Closing on the first message**: `log_only` / `out_of_scope` close the case at once, so a reply from the tenant starts a new case. Revisit with rung 5 (stay open until we have replied?).
-- **Summary claims actions**: the model sometimes writes "she has been asked to…" before any reply exists. Prompt v2 reduced it; an eval check should catch the rest.
+- **Summary claims actions**: the model sometimes wrote "she has been asked to…" before any reply existed. Prompt v2 reduced it; the eval now counts it (0 of 66 on 15 Nov). The check is a regex, so it can miss phrasings.
 - **Unknown POSTs**: today a person must look. Next step: match the world's `case.created` echo by the `ref:` in the description; with no echo after N s, retry once for high/emergency (a duplicate costs less than no case for gas).
 - **Echo event names**: `case.created` / `case.updated` are the fake world's guesses, not the spec's.
 - **Left out on purpose**: (fill in as we go)
