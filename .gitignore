@@ -3,3 +3,4 @@ dist/
 .env
 state/
 traces/
+.langfuse-keys
