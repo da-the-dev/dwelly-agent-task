@@ -13,7 +13,8 @@ import { describeError } from "../errors.js";
 export type EventHandler = (event: WorldEvent) => Promise<void>;
 
 export interface LoopDeps {
-  api: Api;
+  /** The loop only reads the feed; world-changing calls go through the sender. */
+  api: Pick<Api, "getEvents">;
   store: Store;
   tracer: Tracer;
   handle: EventHandler;

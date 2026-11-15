@@ -24,7 +24,7 @@ const ev = (cursor: number): WorldEvent => ({
 function feed(cursors: number[]) {
   const events = cursors.map(ev);
   const calls: number[] = [];
-  const api: Api = {
+  const api: Pick<Api, "getEvents"> = {
     async getEvents(after, limit) {
       calls.push(after);
       const page = events.filter((e) => e.cursor > after).slice(0, limit);
