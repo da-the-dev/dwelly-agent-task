@@ -49,8 +49,26 @@ Design worked out on a diagram first (`../dwelly-history-eda/diagram/`), from a 
 | Redelivered events | The handler checks `caseForCause(event_id)` before the LLM call | At-least-once delivery would otherwise pay for a second call and, if the first case had closed, open a duplicate case. The `UNIQUE (case_id, cause_id)` constraint is the second line of defence. | Rely on the constraint alone (costs a call; a closed case means a new case) |
 | Events other than messages | Traced as `event.ignored` | Rungs 3–4 handle `work_order.*`. Ignoring them now keeps the inbox moving. | Fail them (they would pile up as failed) |
 
+## Rung 3: create the case in Dwelly (15 Nov)
+Design drawn first (`../dwelly-history-eda/diagram/rung3.elements.json`). The four open questions there were decided with my recommended defaults, for review.
+
+| Choice | Pick | Why | Other option |
+|---|---|---|---|
+| How calls are made | Outbox: `actions` rows written in the same transaction as the case version (`saveCaseVersion(v, actions)`); a sender drains them after each batch (`LoopDeps.afterBatch`) | "Record the intent before the call": no version without its calls, no call twice (a redelivered event writes no version, so no row). 429/403 do not fail the event, and the inbox keeps moving. Rungs 4 and 5 reuse the table and sender. | Call inside the handler (a 429 fails the event; a crash between the call and the save loses the Dwelly id) |
+| Crash mid-call | Mark `sending` and commit BEFORE the HTTP call; on startup a `sending` POST becomes `unknown`, a `sending` PATCH goes back to `pending` | We know which calls may have happened instead of guessing. | Retry everything (duplicate cases) |
+| POST timeout / network / 5xx | `unknown`, never re-sent; the case gets `needs_review` | `POST /cases` is not idempotent and there is no GET to check. A duplicate case tells the landlord twice. | Wait for the world's echo with our ref, then retry once for high/emergency (open below) |
+| PATCH timeout / network / 5xx | Back to `pending`, retried next drain | A PATCH sets values: idempotent. | Same as POST |
+| 429 / 403 / 401 | 429: pending, pause sending 20 s. 403: pending, stop sending for the run (reads go on). 401: pending, stop this drain | 429 means not done; 403 means the session is over. | Fail the action |
+| Order within a case | `(case_version, seq)`; a PATCH waits for its case's POST to be `sent`; nothing goes after an `unknown`/`failed` action | A PATCH needs the Dwelly id; after an unknown POST a person decides. | Global FIFO |
+| What is sent (`actionsFor`, pure) | New case: POST (title, urgency, property_id, description = summary + `ref: <our case id>`), then a PATCH status if the case is not `open` (log_only/out_of_scope close at once, external is in_progress). Existing case: PATCH only urgency/status when they change | Every PATCH is a world event and counts toward 429, so the description is not kept in sync. The ref lets a person or code match Dwelly's record to ours. | PATCH description on every summary change |
+| need_info first messages | Opened in Dwelly like any other report | The archive records every report (03); opening tells the landlord, which is the point. | Wait until the problem is clear |
+| A 201's Dwelly id | Saved as a new case version (`cause_kind = action`, `cause_id = act id`) in the same transaction that marks the action sent | The case file shows our calls next to the events; `findCaseByDwellyId` works from then on. A PATCH writes no version (the action row is the record). | A separate id table |
+| World echo events | `case.created` / `case.updated` stay `event.ignored` | Our own calls echoed back; nothing to decide. | Use them to confirm unknown POSTs (later) |
+
 ## Open: decide at the rung where it matters
 - **Model for the live session**: keep DeepSeek flash or move up, decided by the eval scores. First runs: ~$0.0003 and ~0.9 s per classify call on DeepInfra fp8.
 - **Closing on the first message**: `log_only` / `out_of_scope` close the case at once, so a reply from the tenant starts a new case. Revisit with rung 5 (stay open until we have replied?).
 - **Summary claims actions**: the model sometimes writes "she has been asked to…" before any reply exists. Prompt v2 reduced it; an eval check should catch the rest.
+- **Unknown POSTs**: today a person must look. Next step: match the world's `case.created` echo by the `ref:` in the description; with no echo after N s, retry once for high/emergency (a duplicate costs less than no case for gas).
+- **Echo event names**: `case.created` / `case.updated` are the fake world's guesses, not the spec's.
 - **Left out on purpose**: (fill in as we go)
