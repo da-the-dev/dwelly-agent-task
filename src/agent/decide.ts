@@ -67,7 +67,9 @@ export async function decide(
     title: (c?.title || current?.title || message.text).slice(0, 300),
     summary: c?.summary ?? [current?.summary, `${message.actor.role}: ${message.text}`].filter(Boolean).join("\n"),
     openQuestions: c ? c.open_questions : current?.openQuestions ?? [],
-    needsReview: !c,
+    // One flag for "a person must look": the agent sets it (invalid answer here; failed or
+    // unknown calls in the sender; the loop guard in the handler) and never clears it.
+    needsReview: (current?.needsReview ?? false) || !c,
     version: (current?.version ?? 0) + 1,
     createdAt: current?.createdAt ?? now,
     updatedAt: now,

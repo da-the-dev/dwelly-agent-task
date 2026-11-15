@@ -220,6 +220,17 @@ describe("rung 5: messages from the handler", () => {
     expect((await t.store.getCase(caseId))?.needsReview).toBe(true);
   });
 
+  it("needs_review stays set: a later good answer does not clear it; only a person does (review 16 Nov)", async () => {
+    // message 1: the model's answer stays invalid after the retry -> needs_review
+    const t = setup(["not json", "still not json", answer({ urgency: "medium", next_step: "contractor" })]);
+    await t.handle(message("evt_1", "The kitchen tap drips."));
+    const caseId = String(t.line("case.version")?.["case_id"]);
+    expect((await t.store.getCase(caseId))?.needsReview).toBe(true);
+    // message 2: a valid answer
+    await t.handle(message("evt_2", "It is the cold side."));
+    expect(await t.store.getCase(caseId)).toMatchObject({ version: 2, needsReview: true });
+  });
+
   it("a redelivered event writes no second message", async () => {
     const t = setup([answer({})]);
     await t.handle(message("evt_1", gas));

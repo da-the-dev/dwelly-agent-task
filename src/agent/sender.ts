@@ -105,13 +105,20 @@ export function createSender(deps: SenderDeps): Sender {
       if (!recovered) {
         for (const a of await store.recoverSending()) {
           let to = a.kind === "case_patch" ? "pending" : "unknown";
-          const c = a.kind === "msg_send" ? await store.getCase(a.caseId) : null;
+          const c = to === "unknown" ? await store.getCase(a.caseId) : null;
           // a.attempts already counts the interrupted call
           if (c && mayResend(a, c)) {
             await store.markAction(a.id, { status: "pending" });
             to = "pending";
           }
-          tracer.trace("action.recovered", { ...base(a), to });
+          if (c && to === "unknown") {
+            // Same rule as an unknown result in a drain: a person must look (review, 16 Nov).
+            const reason = `${a.kind} unknown: interrupted mid-call (process stopped)`;
+            await store.markAction(a.id, { status: "unknown", error: "interrupted mid-call (process stopped)" }, versionAfter(c, { needsReview: true }, a, reason));
+            tracer.trace("action.recovered", { ...base(a), to, needs_review: true, review_reason: reason });
+          } else {
+            tracer.trace("action.recovered", { ...base(a), to });
+          }
         }
         recovered = true;
       }
@@ -175,7 +182,7 @@ export function createSender(deps: SenderDeps): Sender {
           const why = `${a.kind} ${o.to}: ${o.reason}`.slice(0, 500);
           const v = versionAfter(c, { needsReview: true }, a, why);
           await store.markAction(a.id, { status: o.to, error: o.reason }, v);
-          tracer.trace(`action.${o.to}`, { ...base(a), body: a.body, http_status: http, error: o.reason, needs_review: true });
+          tracer.trace(`action.${o.to}`, { ...base(a), body: a.body, http_status: http, error: o.reason, needs_review: true, review_reason: why });
           r[o.to]++;
           if (!isMessage) blocked.add(a.caseId);
         }

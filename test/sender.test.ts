@@ -149,6 +149,21 @@ describe("outbox sender", () => {
     expect(s.lines.find((l) => l["kind"] === "action.recovered")).toMatchObject({ action_id: "act_1", to: "unknown" });
   });
 
+  it("a crash mid-call: an action recovered as unknown flags the case for a person (review 16 Nov)", async () => {
+    const s = await setup([], [open]);
+    await s.store.markAction("act_1", { status: "sending", attempt: true });
+    await s.sender.drain();
+    const c = await s.store.getCase("case_1");
+    expect(c).toMatchObject({ needsReview: true, version: 2 });
+    expect(s.lines.find((l) => l["kind"] === "action.recovered")).toMatchObject({ to: "unknown", needs_review: true, review_reason: expect.stringMatching(/interrupted/) });
+
+    // a PATCH goes back to pending and an emergency message gets its re-send: no flag
+    const p = await setup([ok("d-1")], [patch], { dwellyCaseId: "d-1" });
+    await p.store.markAction("act_2", { status: "sending", attempt: true });
+    await p.sender.drain();
+    expect((await p.store.getCase("case_1"))?.needsReview).toBe(false);
+  });
+
   it("runs after each batch in the loop; its errors never stop the poll", async () => {
     const store = openSqliteStore(":memory:");
     const lines: Record<string, unknown>[] = [];
