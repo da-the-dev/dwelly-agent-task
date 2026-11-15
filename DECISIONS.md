@@ -81,6 +81,11 @@ The user's choice: a trace viewer for themselves, and a prompt store that is eas
 | Data sent | Full message text and model output go to Langfuse EU cloud. `LANGFUSE_TRACES=off` turns traces off and keeps the keys for prompts | The user's viewer; the archive and fake-world data are Dwelly's, so check before sending a live session's traces | Metadata only (hides what the model saw) |
 | Prompts | Edited in Langfuse; `npm run prompts -- pull classify` writes `prompts/classify.vN.md`. Langfuse version N = file vN, always (push refuses to break that). The `production` label marks what `CLASSIFY_PROMPT` runs. The agent reads only the files | A prompt change stays a commit with an eval before and after, and the session cannot fail because Langfuse is down | The agent fetches the prompt at runtime (simpler to change, but runs stop being reproducible and Langfuse becomes a runtime dependency) |
 
+## Seeing a run (15 Nov)
+| Choice | Why | Not chosen |
+|---|---|---|
+| `npm run story`: a pure renderer (`src/story.ts`) over the JSONL trace | The trace is the record, so the view reads only the trace and works on any past run. One block per case shows the whole conversation; "no reply" is shown where a message got none. `case.version` now carries the message text (the decision's input). | Langfuse only (one trace per event, the case is spread over many); a web page (more code, same data) |
+
 ## Open: decide at the rung where it matters
 - **Model for the live session**: DeepSeek flash (`deepseek/deepseek-v4.1-flash-1017`, DeepInfra fp8) unless something new fails. First eval (15 Nov, prompt v2): 66/66 urgency and next_step, 0 hard fails, the floor never had to step in, $0.012 for 75 calls, ~1.1 s a call. The limit: v2 was tuned while reading these archive cases, so they measure fit, not generalisation; the 6 tone flips are the only held-out items. Every live surprise becomes a new eval item.
 - **Closing on the first message**: `log_only` / `out_of_scope` close the case at once, so a reply from the tenant starts a new case. Revisit with rung 5 (stay open until we have replied?).
