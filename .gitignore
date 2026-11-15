@@ -4,3 +4,4 @@ dist/
 state/
 traces/
 .langfuse-keys
+.claude/

@@ -12,7 +12,7 @@ Dwelly manages rented homes. Build a service that does the property manager's wo
 
 It is a ladder. A working lower rung with tests and traces is worth more than a higher rung held together with tape.
 
-**Current rung: 3 (create the case in Dwelly), built and merged 15 Nov.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`) plus the `POST`/`PATCH /cases` calls it needs, queued in an outbox and sent after each batch (`src/agent/sender.ts`). What rung 5 would say is traced as `intent.message_tenant`. Next: rung 4 (contractor and work order).
+**Current rung: 5 (keep the tenant and the landlord informed), merged 16 Nov, tag `v0.6`. Rung 4 is not started.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`), plus the `POST`/`PATCH /cases` calls it needs and one `msg_send` for each person to tell (`src/agent/speak.ts`, text by `src/agent/reply.ts`). All of them go into the outbox and are sent after each batch (`src/agent/sender.ts`). Next: the `gas-update` fix (an open emergency answers every tenant message), then rung 4 (contractor and work order).
 
 ## Sources of truth
 - `spec/openapi.json`: the API. The world validates requests with it. Do not guess fields; read the spec.
@@ -36,7 +36,7 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `src/agent/loop.ts`: transactional inbox. Fetch, then store the batch and the cursor in one transaction, then handle pending events. Delivery is at-least-once, so **every handler that changes the world must be idempotent**.
 - `src/store/`: state goes only through the async `Store` interface. SQL must run on SQLite and Postgres both.
 - `src/trace.ts`: every decision is one `tracer.trace(kind, {...})` line with the `event_id` it belongs to.
-- `src/agent/handle.ts`: the handler the loop calls per event. A message → find its case (payload case ref, else the open case at the property, else new) → `decide` → save the version and its outbox actions → trace `case.version`, `action.queued` and `intent.message_tenant`. An event that already produced a version is skipped before the LLM call (at-least-once delivery).
+- `src/agent/handle.ts`: the handler the loop calls per event. A message → find its case (payload case ref, else the open case at the property, else new) → `decide` (with the role guard) → `speakFor` and the loop guard → the writer → save the version and its outbox actions, messages first → trace `case.version` and `action.queued`. A landlord or contractor message with no case opens nothing (`message.unlinked`). A tenant message within 72 h of their case closing joins that case. An event that already produced a version is skipped before the LLM call (at-least-once delivery).
 - `src/agent/actions.ts` + `actions` table: rung 3's outbox. `actionsFor(prev, next)` (pure) decides the calls; the handler saves them in the same transaction as the version. Never call a world-changing endpoint from the handler.
 - `src/agent/sender.ts`: drains the outbox after each batch. Marks `sending` before the call. A POST that may have happened (timeout, network, 5xx) is `unknown` and is never sent again; a PATCH is retried. 429 pauses, 403 stops sending.
 - `src/agent/decide.ts`: rung 2's decision for one message: classify (one LLM call) → safety floor → state. It takes the case's latest version and returns the next one; the caller saves it.
@@ -67,5 +67,5 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - Each decision the agent makes writes **one JSON trace line**: the input, what was decided and why, the API call and its result. We must be able to explain any action from the traces alone.
 - Before you say "done": `npm run typecheck && npm test`. Paste the result.
 - Small commits, one rung or one fix each. Do not commit `.env`, `state/` or `traces/`.
-- Do not delete or "clean up" harness files: `AGENTS.md`, `CLAUDE.md`, `DECISIONS.md`, `.claude/`. They are part of the result.
+- Do not delete or "clean up" harness files: `AGENTS.md`, `CLAUDE.md`, `DECISIONS.md`. They are part of the result. `.claude/` is local only (gitignored since 16 Nov); do not delete it either.
 - If something in the spec or the world is unclear, say so and ask. Do not invent behaviour.
