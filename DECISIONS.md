@@ -70,6 +70,26 @@ Design drawn first (`../dwelly-history-eda/diagram/rung3.elements.json`). The fo
 | A 201's Dwelly id | Saved as a new case version (`cause_kind = action`, `cause_id = act id`) in the same transaction that marks the action sent | The case file shows our calls next to the events; `findCaseByDwellyId` works from then on. A PATCH writes no version (the action row is the record). | A separate id table |
 | World echo events | `case.created` / `case.updated` stay `event.ignored` | Our own calls echoed back; nothing to decide. | Use them to confirm unknown POSTs (later) |
 
+## Rung 5: keep the tenant and the landlord informed (15–16 Nov)
+Built before rung 4 after the outside review of 15 Nov: the world answers every message, so an agent that never writes stops after the first report. Design drawn first (`../dwelly-history-eda/diagram/rung5.elements.json`); the user's 6 answers are the first rows.
+
+| Choice | Pick | Why | Other option |
+|---|---|---|---|
+| Who writes the text | A second LLM call, the writer (`src/agent/reply.ts`, `prompts/reply.vN.md`), not part of classify | The user's choice: natural messages. One job per prompt, so each can be evaluated alone. | Templates only; text inside the classify output |
+| What code adds | The safety line, the subject, the length limits; the template when the writer fails | These must be right every time. A message is never lost. | Trust the prompt |
+| The emergency number | One number from config, `EMERGENCY_NUMBER` (default `999`), in "If anyone is in danger, get to a safe place and call 999 now." | Covers gas, fire, an intruder and an injury (the user: a gas-only line is wrong for a robbery) | The gas line 0800 111 999 |
+| Phone numbers in the writer's text | None: a zod rule rejects 8+ digits with any separators; sentences with one are cut from the safety advice | Code gives the only number. Found when the writer copied the gas line (15 Nov); widened when a review got 0800-111-999 through (16 Nov) | Allow numbers from the case |
+| Who gets a message (`speakFor`, pure) | The reporter on a new case, urgency up, new questions, a status or `waiting_on` change, the close, a question (`?`), and every message of theirs while the case is an open emergency (`open_emergency`, 16 Nov). Anyone else only when they ask. Never a contractor | Write only when there is something new to say, so a "thanks" gets no answer (no ping-pong). In an emergency the tenant is never left without an answer (the user, 15 Nov) | A reply to every message |
+| Role guard | A landlord or contractor message keeps the next step, status, `waiting_on` and outcome; urgency = max(current, new). With no case it opens nothing (`message.unlinked`) | A landlord's "it can wait" must not lower a no-heat case; a contractor's note is not a report | Triage every sender the same way |
+| Message sending | `msg_send` in the same outbox. A message never waits for a case action and is not blocked by a failed message. A timeout on an emergency message: one re-send; otherwise `unknown` | A safety text must not wait behind `POST /cases` (the user: re-send once in an emergency) | Same rules as `POST /cases` |
+| Loop guard | 5 messages in a row to one person with no move of the case: the 6th and every later one is kept as a `held` action (never written or sent), the case gets `needs_review` | A normal question-and-answer exchange already has 3 turns. `held` keeps the streak, so the guard stays stopped (the 7th got through until 16 Nov) | Limit 3; drop the message without a record |
+| Answers to a closed case | A tenant's message within 72 h of the close joins that case (`recent_closed_case`). The window counts from the close, not from the last update (16 Nov) | Without it, each answer to a close note opened a new case, which got a message, and so on. Blind to content: Phase 2 adds `same_problem` | Keep cases open until the tenant answers |
+
+| Choice | Pick | Why | Other option |
+|---|---|---|---|
+| `needs_review` lifecycle (16 Nov) | One flag for "a person must look". Set by an invalid model answer, a failed or unknown call (also one found after a crash) and the loop guard. The agent never clears it; a person does. Traces carry `review_reason` | A review found that a later good answer cleared it, and a crash recovery did not set it | A flag per cause (more columns, the same question for a person) |
+| Regex policy (16 Nov) | A pattern may check the FORMAT of our own output (the phone check). It never does perception of what people wrote: that is the model's job, as structured fields, with code applying fixed rules to them | Two reviews broke every free-text regex with simple rewording (natural gas, "smoke alarm", a `?`-less question). Phase 2 (`docs/phase2-perception-plan.md`) moves the floor, `asks()` and the question check to model fields | One more pattern per failing phrase |
+
 ## Langfuse: trace viewer and prompt editor (15 Nov)
 The user's choice: a trace viewer for themselves, and a prompt store that is easier to work with than files alone. Free plan, EU cloud.
 
@@ -90,7 +110,7 @@ The user's choice: a trace viewer for themselves, and a prompt store that is eas
 
 ## Open: decide at the rung where it matters
 - **Model for the live session**: DeepSeek flash (`deepseek/deepseek-v4.1-flash-1017`, DeepInfra fp8) unless something new fails. First eval (15 Nov, prompt v2): 66/66 urgency and next_step, 0 hard fails, the floor never had to step in, $0.012 for 75 calls, ~1.1 s a call. The limit: v2 was tuned while reading these archive cases, so they measure fit, not generalisation; the 6 tone flips are the only held-out items. Every live surprise becomes a new eval item.
-- **Closing on the first message**: `log_only` / `out_of_scope` close the case at once, so a reply from the tenant starts a new case. Revisit with rung 5 (stay open until we have replied?).
+- **Closing on the first message**: `log_only` / `out_of_scope` still close the case at once. Since rung 5, a tenant's message within 72 h of the close joins that case (see Rung 5), so an answer to the close note does not start a new case. The join is blind to content; Phase 2 adds `same_problem`.
 - **Summary claims actions**: the model sometimes wrote "she has been asked to…" before any reply existed. Prompt v2 reduced it; the eval now counts it (0 of 66 on 15 Nov). The check is a regex, so it can miss phrasings.
 - **Unknown POSTs**: today a person must look. Next step: match the world's `case.created` echo by the `ref:` in the description; with no echo after N s, retry once for high/emergency (a duplicate costs less than no case for gas).
 - **Echo event names**: `case.created` / `case.updated` are the fake world's guesses, not the spec's.
@@ -100,5 +120,4 @@ The user's choice: a trace viewer for themselves, and a prompt store that is eas
 Parked by the user on 15 Nov. None of these blocks rungs 4 and 5.
 - **Phase 2: perception from regex to the model** (two outside reviews, 16 Nov): the floor, `asks()`, the new-question check and the claim check break on simple rewording. The plan is in `docs/phase2-perception-plan.md`. It starts after the live session.
 - **`/regress` command** (review C1): a `.claude/commands/` command that takes an `event_id` from a trace, writes it as an eval item, shows it fail, then the fix and a pass. It shows the harness, and it makes the live "turn a failure into a check" step faster.
-- **Fake world answers** (review C2): one answer for each message we send. This is step 4 of the rung 5 plan in the diagram, so it may come back with rung 5.
 - **Say it before they ask**: `cases.json` measures fit, not generalisation. The held-out items are the 6 tone flips and, since 15 Nov, the 20 scenarios (see "Scenario set" above).

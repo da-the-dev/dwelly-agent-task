@@ -1,6 +1,7 @@
 // The classifier against a fake OpenRouter: validation, retry, fallback, trace lines.
 import { describe, expect, it } from "vitest";
-import { CLASSIFY_PROMPT, classificationJsonSchema, classify, loadPrompt, modelInput } from "../src/agent/classify.js";
+import { CLASSIFY_PROMPT, Classification, classify, loadPrompt, modelInput } from "../src/agent/classify.js";
+import { jsonSchemaOf } from "../src/agent/llm-call.js";
 import type { IncomingMessage } from "../src/agent/message.js";
 import { createTracer } from "../src/trace.js";
 
@@ -79,7 +80,7 @@ describe("classify", () => {
   });
 
   it("sends a strict schema: no extra keys, every key required", async () => {
-    const schema = classificationJsonSchema() as { additionalProperties: unknown; required: string[]; properties: Record<string, unknown> };
+    const schema = jsonSchemaOf(Classification) as { additionalProperties: unknown; required: string[]; properties: Record<string, unknown> };
     expect(schema.additionalProperties).toBe(false);
     expect([...schema.required].sort()).toEqual(Object.keys(schema.properties).sort());
     expect(schema).not.toHaveProperty("$schema");

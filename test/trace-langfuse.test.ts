@@ -25,6 +25,11 @@ describe("planObservation", () => {
     });
   });
 
+  it("a generation is named after its prompt (the writer is 'reply', not 'classify'); no prompt -> llm.call", () => {
+    expect(planObservation({ ...llmCall, prompt: "reply.v3@abc" }, { sessions: "case" }).name).toBe("reply");
+    expect(planObservation({ ...llmCall, prompt: undefined }, { sessions: "case" }).name).toBe("llm.call");
+  });
+
   it("case.version names the trace and puts it in the case's session", () => {
     const p = planObservation(caseVersion, { sessions: "case" });
     expect(p).toMatchObject({ traceKey: "evt_5", traceName: "evt_5 · Boiler dead", sessionId: "case_9", asType: "event" });

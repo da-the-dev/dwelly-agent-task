@@ -74,7 +74,8 @@ export function planObservation(line: Line, opts: PlanOptions): ObservationPlan 
     const prompt = promptRef(data["prompt"]);
     return {
       ...base,
-      name: "classify",
+      // Named after its prompt, so the writer's call reads "reply" (review, 16 Nov).
+      name: prompt?.name ?? "llm.call",
       asType: "generation",
       startTime: new Date(at.getTime() - latency),
       endTime: at,

@@ -3,7 +3,7 @@
 // The call itself (zod check, one retry, `llm.call` traces) is structuredCall in llm-call.ts.
 import { z } from "zod";
 import { NEXT_STEPS, URGENCIES, type CaseRecord } from "../case.js";
-import { jsonSchemaOf, structuredCall, type StructuredDeps } from "./llm-call.js";
+import { structuredCall, type StructuredDeps } from "./llm-call.js";
 import type { IncomingMessage } from "./message.js";
 
 export { loadPrompt, type Prompt } from "./llm-call.js";
@@ -19,10 +19,6 @@ export const Classification = z.strictObject({
 });
 export type Classification = z.infer<typeof Classification>;
 
-/** Strict JSON Schema for response_format, generated from the same zod schema. */
-export function classificationJsonSchema(): Record<string, unknown> {
-  return jsonSchemaOf(Classification);
-}
 
 /** The prompt the agent uses. Older versions stay in prompts/ so runs can be compared. */
 export const CLASSIFY_PROMPT = "classify.v2";
