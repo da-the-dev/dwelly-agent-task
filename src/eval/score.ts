@@ -18,6 +18,8 @@ export interface RunResult {
   invalid: boolean;
   summary: string;
   why: string;
+  /** --reply only: the messages the writer produced for the last step. */
+  replies?: ReplyResult[];
 }
 
 export interface Score {
@@ -44,6 +46,30 @@ const CLAIM =
 
 export function summaryClaims(summary: string): boolean {
   return CLAIM.test(summary);
+}
+
+// A message (rung 5) must not claim what only the world can confirm: before rung 4 nobody is
+// booked, called or on the way. "We will arrange" is fine; "we've booked" is not.
+const REPLY_CLAIM =
+  /\b(we|i)('ve|\s+have|\s+has)?\s+(already\s+)?(called|phoned|rung|contacted|booked|arranged|dispatched|sent (an?|the|someone)|notified|informed|spoken to|reported)\b|\b(is|are) on (their|his|her|its|the) way\b|\b(has|have) been (dispatched|booked|called|arranged)\b/i;
+
+export function replyClaims(body: string): boolean {
+  return REPLY_CLAIM.test(body);
+}
+
+/** One message the writer produced for an eval run (npm run eval -- --reply). */
+export interface ReplyResult {
+  to: string;
+  role: string;
+  reasons: string[];
+  source: "model" | "template";
+  /** The body claims an action that has not happened. */
+  claim: boolean;
+  /** An open emergency case and a tenant: the body must start with the safety line. */
+  safetyExpected: boolean;
+  safetyPresent: boolean;
+  words: number;
+  body: string;
 }
 
 export function score(item: EvalItem, r: RunResult): Score {

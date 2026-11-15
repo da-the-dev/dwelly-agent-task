@@ -83,4 +83,24 @@ describe("writeReply", () => {
     expect((await writeReply(t.deps, landlord)).body).toBe("Ms Whitlow, the cost is not known yet.");
     expect(writerInput(landlord)).toMatchObject({ safety_advice: null, their_message: null });
   });
+
+  it("a phone number in the model's text is an invalid answer: the retry tells the model why", async () => {
+    const t = setup([
+      JSON.stringify({ body: "Leave and call the National Gas Emergency line on 0800 111 999." }),
+      JSON.stringify({ body: "Leave the building now." }),
+    ]);
+    const w = await writeReply(t.deps, input);
+    expect(w).toMatchObject({ source: "model", body: expect.stringMatching(/call 999 now\.\n\nLeave the building now\.$/) });
+    expect(t.lines.filter((l) => l["kind"] === "llm.call")[0]?.["error"]).toMatch(/phone number/);
+  });
+
+  it("the safety advice loses any sentence with a phone number, for the model and the template", async () => {
+    const withLine = { ...input, safetyAdvice: "Leave the building. Call the gas line on 0800 111 999 from outside." };
+    expect(writerInput(withLine).safety_advice).toBe("Leave the building.");
+    const t = setup(["x", "y"]);
+    const w = await writeReply(t.deps, withLine);
+    expect(w.source).toBe("template");
+    expect(w.body).toContain("Leave the building.");
+    expect(w.body).not.toContain("0800");
+  });
 });

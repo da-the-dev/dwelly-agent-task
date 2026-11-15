@@ -1,7 +1,7 @@
 // Rung 5: when we write, to whom, and the parts code writes (never the model).
 import { describe, expect, it } from "vitest";
 import type { CaseRecord } from "../src/case.js";
-import { finalBody, looping, safetyLine, speakFor, subjectFor, templateReply, type PastTurn } from "../src/agent/speak.js";
+import { finalBody, looping, withoutPhoneNumbers, safetyLine, speakFor, subjectFor, templateReply, type PastTurn } from "../src/agent/speak.js";
 
 const c: CaseRecord = {
   id: "case_1",
@@ -96,5 +96,11 @@ describe("the parts code writes", () => {
         "To work out the right next step, we need a few details from you.\n\nCould you tell us:\n- Is it the hot or the cold side?",
     );
     expect(templateReply({ to: "l", role: "landlord", name: null, reasons: ["asked"] }, c, null)).toMatch(/^Hello,/);
+  });
+
+  it("phone numbers: sentences with one are dropped; the short emergency code is not a phone number", () => {
+    expect(withoutPhoneNumbers("Open the windows. Call 0800 111 999 now! Then wait outside.")).toBe("Open the windows. Then wait outside.");
+    expect(withoutPhoneNumbers("Call 999 if anyone is hurt.")).toBe("Call 999 if anyone is hurt.");
+    expect(withoutPhoneNumbers("Call +44 20 7946 0000.")).toBeNull();
   });
 });

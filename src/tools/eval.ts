@@ -6,6 +6,8 @@
 //   npm run eval -- --runs 1 --only case-05,calm-gas
 //   npm run eval -- --prompt classify.v1          an older prompt, to compare
 //   LLM_MODEL=... LLM_PROVIDERS=any npm run eval  another model
+//   npm run eval -- --reply                       also write the rung 5 messages for the last
+//                                                 step and score them (claims, safety line)
 //
 // Writes the llm.call traces to traces/eval-<time>.jsonl and a report to
 // evals/runs/<time>__<model>__<prompt>.json (committed: the evidence for model and prompt
@@ -16,7 +18,9 @@ import { decide } from "../agent/decide.js";
 import type { CaseRecord } from "../case.js";
 import { loadConfig } from "../config.js";
 import { describeError } from "../errors.js";
-import { report, type RunResult } from "../eval/score.js";
+import { REPLY_PROMPT, writeReply } from "../agent/reply.js";
+import { safetyLine, speakFor } from "../agent/speak.js";
+import { replyClaims, report, type ReplyResult, type RunResult } from "../eval/score.js";
 import { itemMessages, loadArchive, loadEvalSet, type EvalItem } from "../eval/set.js";
 import { createTracer, fileSink } from "../trace.js";
 import { startLangfuseTracing } from "../trace-langfuse.js";
@@ -35,6 +39,8 @@ const runs = Number(flag("runs") ?? 3);
 const concurrency = Number(flag("concurrency") ?? 1);
 const only = flag("only")?.split(",");
 const prompt = loadPrompt(flag("prompt") ?? CLASSIFY_PROMPT);
+const withReply = argv.includes("--reply");
+const replyPrompt = loadPrompt(flag("reply-prompt") ?? REPLY_PROMPT);
 
 const archive = loadArchive();
 const items = loadEvalSet().filter((i) => !only || only.includes(i.id));
@@ -50,24 +56,50 @@ const tracer = createTracer(runId, fileSink(tracePath), ...(langfuse ? [langfuse
   const l = JSON.parse(line) as CallLine;
   if (l.kind === "llm.call") calls.push(l);
 });
-const deps = { llm: { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers }, prompt, tracer };
+const llm = { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers };
+const deps = { llm, prompt, tracer };
+const writer = { llm, prompt: replyPrompt, tracer, emergencyNumber: config.emergencyNumber };
 
 console.log(
-  `eval: ${items.length} items x ${runs} runs | model ${config.llm.model} via ${config.llm.providers.join(",") || "any provider"} | prompt ${prompt.version}\n`,
+  `eval: ${items.length} items x ${runs} runs | model ${config.llm.model} via ${config.llm.providers.join(",") || "any provider"} | prompt ${prompt.version}${withReply ? ` + ${replyPrompt.version}` : ""}\n`,
 );
 
 async function runOne(item: EvalItem, run: number): Promise<RunResult> {
   let current: CaseRecord | null = null;
   let floorOverrode = false;
   let invalid = false;
+  let prev: CaseRecord | null = null;
   let last: Awaited<ReturnType<typeof decide>> | null = null;
+  let lastMessage: ReturnType<typeof itemMessages>[number] | null = null;
   for (const m of itemMessages(item, archive, run)) {
+    prev = current;
     last = await decide(deps, current, m, m.occurredAt, () => `eval_${item.id}_r${run}`);
+    lastMessage = m;
     current = last.next;
     floorOverrode ||= last.overrides.length > 0;
     invalid ||= last.classification === null;
   }
-  if (!last) throw new Error(`eval ${item.id}: no messages`);
+  if (!last || !lastMessage) throw new Error(`eval ${item.id}: no messages`);
+  const replies: ReplyResult[] = [];
+  if (withReply) {
+    // the reporter is whoever sent the item's first message
+    const reporterName = itemMessages(item, archive, run)[0]?.actor.name ?? null;
+    for (const recipient of speakFor(prev, last.next, lastMessage, reporterName)) {
+      const w = await writeReply(writer, { recipient, case: last.next, safetyAdvice: last.safetyAdvice, incoming: lastMessage });
+      const line = recipient.role === "tenant" ? safetyLine(last.next, config.emergencyNumber) : null;
+      replies.push({
+        to: recipient.to,
+        role: recipient.role,
+        reasons: recipient.reasons,
+        source: w.source,
+        claim: replyClaims(w.body),
+        safetyExpected: line !== null,
+        safetyPresent: line !== null && w.body.startsWith(line),
+        words: w.body.split(/\s+/).length,
+        body: w.body,
+      });
+    }
+  }
   return {
     item: item.id,
     run,
@@ -79,6 +111,7 @@ async function runOne(item: EvalItem, run: number): Promise<RunResult> {
     invalid,
     summary: last.next.summary,
     why: last.why,
+    ...(withReply ? { replies } : {}),
   };
 }
 
@@ -136,9 +169,19 @@ summary     ${t.summaryClaims} runs claim an action that did not happen
 errors      ${errors.length}${errors.length ? `: ${errors.map((e) => `${e.item}#${e.run} ${e.error}`).join("; ")}` : ""}
 calls       ${calls.length} via ${providers || "-"}, $${cost.toFixed(4)}, p50 ${p50} ms
 traces      ${tracePath}`);
+const replies = results.flatMap((x) => x.replies ?? []);
+if (withReply) {
+  const words = replies.map((x) => x.words).sort((a, b) => a - b);
+  const expected = replies.filter((x) => x.safetyExpected);
+  console.log(`replies     ${replies.length} written, ${replies.filter((x) => x.source === "template").length} fell back to the template
+  claims    ${replies.filter((x) => x.claim).length} claim an action that did not happen
+  safety    ${expected.filter((x) => x.safetyPresent).length}/${expected.length} emergency messages start with the safety line
+  length    p50 ${words[Math.floor(words.length / 2)] ?? 0} words, max ${words.at(-1) ?? 0}`);
+  for (const x of replies.filter((y) => y.claim)) console.log(`  CLAIM ${x.to}: ${x.body.replace(/\s+/g, " ").slice(0, 200)}`);
+}
 
 const slug = (s: string) => s.replace(/[^a-z0-9.-]+/gi, "_");
-const reportPath = `evals/runs/${stamp}__${slug(config.llm.model)}__${prompt.name}.json`;
+const reportPath = `evals/runs/${stamp}__${slug(config.llm.model)}__${prompt.name}${withReply ? `+${replyPrompt.name}` : ""}.json`;
 mkdirSync("evals/runs", { recursive: true });
 writeFileSync(
   reportPath,
@@ -149,6 +192,7 @@ writeFileSync(
       providers: config.llm.providers,
       served_by: providers,
       prompt: prompt.version,
+      ...(withReply ? { reply_prompt: replyPrompt.version } : {}),
       runs,
       cost_usd: Number(cost.toFixed(5)),
       p50_latency_ms: p50,
@@ -164,4 +208,5 @@ writeFileSync(
 console.log(`report      ${reportPath}`);
 await langfuse?.shutdown();
 if (langfuse) console.log(`langfuse    session ${runId} (environment eval)`);
-process.exitCode = errors.length ? 2 : t.underRated ? 1 : 0;
+const replyFail = replies.some((x) => x.safetyExpected && !x.safetyPresent);
+process.exitCode = errors.length ? 2 : t.underRated || replyFail ? 1 : 0;

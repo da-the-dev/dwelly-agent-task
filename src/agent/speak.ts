@@ -90,6 +90,20 @@ export function safetyLine(c: Pick<CaseRecord, "urgency" | "status">, emergencyN
   return `If anyone is in danger, get to a safe place and call ${emergencyNumber} now.`;
 }
 
+/**
+ * A phone number other than a short emergency code (999, 112): 8+ digits and spaces. Only
+ * code puts a number in a message (the safety line), so the model's text must have none.
+ * Found in a try run on 15 Nov: the writer copied the gas line (0800 111 999) from the case.
+ */
+export const PHONE = /\+?\d[\d ]{6,}\d/;
+
+/** Drop every sentence that holds a phone number; null when nothing is left. */
+export function withoutPhoneNumbers(text: string | null): string | null {
+  if (!text) return null;
+  const kept = text.split(/(?<=[.!?])\s+/).filter((s) => !PHONE.test(s)).join(" ").trim();
+  return kept || null;
+}
+
 // Limits from the spec's ActorMessage.
 const SUBJECT_MAX = 300;
 const BODY_MAX = 10_000;
@@ -118,7 +132,8 @@ export function templateReply(r: Recipient, c: CaseRecord, safetyAdvice: string 
   }
   const parts = [hello];
   if (r.reasons.includes("new_case")) parts.push(`Thank you for telling us about "${c.title}".`);
-  if (safetyAdvice) parts.push(safetyAdvice);
+  const advice = withoutPhoneNumbers(safetyAdvice);
+  if (advice) parts.push(advice);
   parts.push(isClosed(c) ? "We are closing this case now. Tell us if the problem comes back." : NEXT[c.nextStep]);
   if (c.openQuestions.length && !isClosed(c)) parts.push(`Could you tell us:\n${c.openQuestions.map((q) => `- ${q}`).join("\n")}`);
   return parts.join("\n\n");

@@ -1,6 +1,6 @@
 // npm run eval's set and scoring, without the LLM.
 import { describe, expect, it } from "vitest";
-import { isCritical, report, score, summaryClaims, type RunResult } from "../src/eval/score.js";
+import { isCritical, replyClaims, report, score, summaryClaims, type RunResult } from "../src/eval/score.js";
 import { itemMessages, loadArchive, loadEvalSet, type EvalItem } from "../src/eval/set.js";
 
 const archive = loadArchive();
@@ -73,5 +73,19 @@ describe("scoring", () => {
     ]);
     expect(r.totals).toMatchObject({ runs: 2, urgencyOk: 1, nextStepOk: 1, bothOk: 1, underRated: 1 });
     expect(r.items[0]?.urgencies).toEqual({ emergency: 1, high: 1 });
+  });
+});
+
+describe("reply claims (rung 5)", () => {
+  it("flags a message that says something happened when it has not", () => {
+    expect(replyClaims("We've booked Thames & Vale for Thursday.")).toBe(true);
+    expect(replyClaims("We have called the gas emergency line.")).toBe(true);
+    expect(replyClaims("An engineer is on the way.")).toBe(true);
+    expect(replyClaims("A plumber has been booked.")).toBe(true);
+  });
+  it("lets through what we will do, and what the tenant did", () => {
+    expect(replyClaims("We will arrange a plumber and confirm a time with you.")).toBe(false);
+    expect(replyClaims("Thanks for turning the stopcock off - you have done the right thing.")).toBe(false);
+    expect(replyClaims("We have logged this on your home's record.")).toBe(false);
   });
 });

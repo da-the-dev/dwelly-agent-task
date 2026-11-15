@@ -5,12 +5,15 @@
 //   npm run try:classify -- case-04@6                replay the thread up to messages[6]:
 //                                                    every non-manager message, in order,
 //                                                    each one seeing the state the last left
+// Each step also prints the rung 5 messages the agent would send (a second LLM call each).
 // Writes the llm.call traces to traces/try-<time>.jsonl and prints one block per step.
 import { readFileSync } from "node:fs";
 import type { CaseRecord } from "../case.js";
 import { loadConfig } from "../config.js";
 import { CLASSIFY_PROMPT, loadPrompt } from "../agent/classify.js";
 import { decide } from "../agent/decide.js";
+import { REPLY_PROMPT, writeReply } from "../agent/reply.js";
+import { speakFor } from "../agent/speak.js";
 import { archiveMessage, loadArchive, threadUpTo } from "../eval/set.js";
 import { createTracer, fileSink } from "../trace.js";
 import { startLangfuseTracing } from "../trace-langfuse.js";
@@ -27,7 +30,9 @@ const tracer = createTracer(runId, fileSink(tracePath), ...(langfuse ? [langfuse
 const argv = process.argv.slice(2);
 const promptAt = argv.indexOf("--prompt");
 const prompt = loadPrompt(promptAt >= 0 ? argv.splice(promptAt, 2)[1] ?? CLASSIFY_PROMPT : CLASSIFY_PROMPT);
-const deps = { llm: { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers }, prompt, tracer };
+const llm = { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers };
+const deps = { llm, prompt, tracer };
+const writer = { llm, prompt: loadPrompt(REPLY_PROMPT), tracer, emergencyNumber: config.emergencyNumber };
 
 const args = argv;
 const specs = args.length ? args : ["case-05", "case-11", "case-03", "case-14", "case-04@6"];
@@ -46,6 +51,7 @@ for (const spec of specs) {
     const m = c.messages[i];
     if (!m) continue;
     const message = archiveMessage(c, i);
+    const prev = current;
     const r = await decide(deps, current, message, m.sent_at, () => `try_${c.id}`);
     current = r.next;
     const n = r.next;
@@ -59,11 +65,20 @@ for (const spec of specs) {
     console.log(`  questions: ${n.openQuestions.length ? n.openQuestions.join(" | ") : "-"}`);
     console.log(`  title:     ${n.title}`);
     console.log(`  summary:   ${n.summary}`);
+    const reporter = c.messages.find((x) => x.from === "tenant")?.name ?? null;
+    for (const recipient of speakFor(prev, n, message, reporter)) {
+      const w = await writeReply(writer, { recipient, case: n, safetyAdvice: r.safetyAdvice, incoming: message });
+      console.log(`  reply to ${recipient.role} (${recipient.reasons.join(", ")}; ${w.source}):\n    ${w.body.replace(/\n/g, "\n    ")}`);
+    }
   }
   console.log();
 }
 
-const calls = readFileSync(tracePath, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { cost_usd?: number | null; latency_ms?: number; provider?: string });
+const calls = readFileSync(tracePath, "utf8")
+  .trim()
+  .split("\n")
+  .map((l) => JSON.parse(l) as { kind: string; cost_usd?: number | null; latency_ms?: number; provider?: string })
+  .filter((l) => l.kind === "llm.call");
 const cost = calls.reduce((s, l) => s + (l.cost_usd ?? 0), 0);
 const served = [...new Set(calls.map((l) => l.provider))].join(", ");
 console.log(`${calls.length} LLM calls via ${served}, $${cost.toFixed(5)}, avg ${Math.round(calls.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / calls.length)} ms`);
