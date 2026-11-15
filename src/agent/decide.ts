@@ -17,6 +17,8 @@ export interface DecideResult {
   classification: Classification | null;
   safetyAdvice: string | null;
   attempts: number;
+  /** A landlord or contractor wrote: the case's next step and state were kept. */
+  roleGuard: boolean;
 }
 
 const max = (...us: (Urgency | null | undefined)[]): Urgency =>
@@ -44,14 +46,23 @@ export async function decide(
       };
   const { decision, overrides } = applyFloor(proposed, floor);
 
+  // Role guard: the classifier triages a tenant's report. A landlord's "go ahead" or a
+  // contractor's "Thursday works" is not a report, so it may add to the summary and the
+  // questions but never moves the case: next step and state stay, urgency can only rise.
+  const guard = current && message.actor.role !== "tenant" ? current : null;
+  const nextStep = guard ? guard.nextStep : decision.nextStep;
+  const state = guard ? { status: guard.status, waitingOn: guard.waitingOn, outcome: guard.outcome } : stateFor(nextStep);
+  const urgency = guard ? max(guard.urgency, decision.urgency) : decision.urgency;
+  const why = guard ? `role guard (${message.actor.role}): next step and state kept; ${decision.why}` : decision.why;
+
   const next: CaseRecord = {
     id: current?.id ?? newId(),
     dwellyCaseId: current?.dwellyCaseId ?? null,
     propertyId: current?.propertyId ?? message.propertyId,
     reporter: current?.reporter ?? message.actor.id,
-    ...stateFor(decision.nextStep),
-    urgency: decision.urgency,
-    nextStep: decision.nextStep,
+    ...state,
+    urgency,
+    nextStep,
     contractorId: current?.contractorId ?? null,
     title: (c?.title || current?.title || message.text).slice(0, 300),
     summary: c?.summary ?? [current?.summary, `${message.actor.role}: ${message.text}`].filter(Boolean).join("\n"),
@@ -61,5 +72,5 @@ export async function decide(
     createdAt: current?.createdAt ?? now,
     updatedAt: now,
   };
-  return { next, why: decision.why, overrides, floor, classification: c, safetyAdvice: c?.safety_advice ?? null, attempts: r.attempts };
+  return { next, why, overrides, floor, classification: c, safetyAdvice: c?.safety_advice ?? null, attempts: r.attempts, roleGuard: !!guard };
 }

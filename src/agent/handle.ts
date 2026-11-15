@@ -57,6 +57,19 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       current = await store.findOpenCase(propertyId);
       if (current) linkedBy = "open_case_at_property";
     }
+    // Role guard: only a tenant reports a new problem. A landlord or contractor message we
+    // cannot place must not open a case (POST /cases would tell the landlord about it).
+    if (!current && message.actor.role !== "tenant") {
+      tracer.trace("message.unlinked", {
+        event_id: event.id,
+        from: message.actor.id,
+        role: message.actor.role,
+        property_id: propertyId,
+        text: message.text,
+        note: "no case found; not a tenant, so no new case: a person should look",
+      });
+      return;
+    }
 
     const r = await decide(deps.classify, current, { ...message, propertyId }, now());
     const next = r.next;
@@ -87,6 +100,7 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       why: r.why,
       floor: r.floor.rules,
       overrides: r.overrides,
+      role_guard: r.roleGuard,
       needs_review: next.needsReview,
       attempts: r.attempts,
       title: next.title,

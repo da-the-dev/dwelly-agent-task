@@ -6,15 +6,15 @@ import { createHandler } from "../src/agent/handle.js";
 import { openSqliteStore } from "../src/store/sqlite.js";
 import { createTracer } from "../src/trace.js";
 
-const message = (id: string, body: string, actor = "tenant_09", property = "prop_09"): WorldEvent => ({
+const message = (id: string, body: string, actor = "tenant_09", property: string | null = "prop_09", role = "tenant"): WorldEvent => ({
   id,
   cursor: Number(id.replace(/\D/g, "")),
   type: "message.received",
   channel: "email",
-  actor: { id: actor, role: "tenant", name: "Nadia" },
+  actor: { id: actor, role, name: role === "tenant" ? "Nadia" : "Ms Whitlow" },
   sim_ms: 0,
   occurred_at: "2026-11-11T17:04:00.000Z",
-  payload: { body, property_id: property },
+  payload: property ? { body, property_id: property } : { body },
 });
 
 const answer = (o: Record<string, unknown>) =>
@@ -136,5 +136,41 @@ describe("message handler (rungs 2-3)", () => {
       ["new", "prop_09"],
       ["open_case_at_property", "prop_09"],
     ]);
+  });
+});
+
+describe("role guard: only a tenant's report moves the case", () => {
+  it("a landlord's 'approved' keeps the urgency, the next step and the status", async () => {
+    const t = setup([
+      answer({ urgency: "high", next_step: "contractor" }),
+      answer({ urgency: "low", next_step: "log_only", summary: "landlord approved the spend" }),
+    ]);
+    await t.handle(message("evt_1", "water is coming through my ceiling"));
+    await t.handle(message("evt_2", "Approved - please proceed.", "landlord_09", "prop_09", "landlord"));
+
+    const caseId = String(t.line("case.version")?.["case_id"]);
+    expect(await t.store.getCase(caseId)).toMatchObject({
+      version: 2, urgency: "high", nextStep: "contractor", status: "open", waitingOn: "contractor", summary: "landlord approved the spend",
+    });
+    expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => l["role_guard"])).toEqual([false, true]);
+    // nothing changed that Dwelly holds: no PATCH
+    expect((await t.store.actionsForCase(caseId)).map((a) => a.kind)).toEqual(["case_open"]);
+  });
+
+  it("a landlord's message can still raise the urgency", async () => {
+    const t = setup([answer({ urgency: "medium" }), answer({ urgency: "high", next_step: "log_only" })]);
+    await t.handle(message("evt_1", "small leak under the sink"));
+    await t.handle(message("evt_2", "The tenant below says water is coming through her ceiling.", "landlord_09", "prop_09", "landlord"));
+    const caseId = String(t.line("case.version")?.["case_id"]);
+    expect(await t.store.getCase(caseId)).toMatchObject({ urgency: "high", nextStep: "contractor", status: "open" });
+  });
+
+  it("a contractor's message we cannot place opens no case and makes no LLM call", async () => {
+    const t = setup([answer({})]);
+    await t.handle(message("evt_1", "We can do Thursday 12-2 for the tap.", "c_A", null, "contractor"));
+    expect(t.calls()).toBe(0);
+    expect(t.kinds()).toEqual(["message.unlinked"]);
+    expect(t.line("message.unlinked")).toMatchObject({ event_id: "evt_1", from: "c_A", role: "contractor" });
+    expect(await t.store.pendingActions(10)).toEqual([]);
   });
 });
