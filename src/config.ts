@@ -30,6 +30,20 @@ export interface Config {
     /** OpenRouter provider endpoints, in order, no fallback. Empty: any provider. */
     providers: string[];
   };
+  /**
+   * Langfuse (EU cloud): a trace viewer and the place prompts are edited. null when the keys
+   * are not set. The agent never needs it to run: traces go to the JSONL file first, and
+   * prompts are read from prompts/ (copied from Langfuse by `npm run prompts -- pull`).
+   */
+  langfuse: LangfuseConfig | null;
+}
+
+export interface LangfuseConfig {
+  baseUrl: string;
+  publicKey: string;
+  secretKey: string;
+  /** LANGFUSE_TRACES=off keeps the keys (for prompts) but sends no traces. */
+  traces: boolean;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -62,6 +76,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       model: env["LLM_MODEL"]?.trim() || DEFAULT_MODEL,
       providers: parseProviders(env["LLM_PROVIDERS"]),
     },
+    langfuse: loadLangfuse(env),
+  };
+}
+
+function loadLangfuse(env: NodeJS.ProcessEnv): LangfuseConfig | null {
+  const publicKey = env["LANGFUSE_PUBLIC_KEY"]?.trim();
+  const secretKey = env["LANGFUSE_SECRET_KEY"]?.trim();
+  if (!publicKey || !secretKey) return null;
+  return {
+    baseUrl: (env["LANGFUSE_BASE_URL"]?.trim() || "https://cloud.langfuse.com").replace(/\/+$/, ""),
+    publicKey,
+    secretKey,
+    traces: !/^(off|false|0|no)$/i.test(env["LANGFUSE_TRACES"]?.trim() ?? ""),
   };
 }
 

@@ -19,6 +19,7 @@ import { describeError } from "../errors.js";
 import { report, type RunResult } from "../eval/score.js";
 import { itemMessages, loadArchive, loadEvalSet, type EvalItem } from "../eval/set.js";
 import { createTracer, fileSink } from "../trace.js";
+import { startLangfuseTracing } from "../trace-langfuse.js";
 
 const config = loadConfig();
 if (!config.llm.apiKey) throw new Error("OPENROUTER_API_KEY is not set in .env");
@@ -44,7 +45,8 @@ const runId = `eval-${stamp}`;
 const tracePath = `traces/${runId}.jsonl`;
 interface CallLine { kind: string; cost_usd?: number | null; latency_ms?: number; provider?: string; model?: string }
 const calls: CallLine[] = [];
-const tracer = createTracer(runId, fileSink(tracePath), (line) => {
+const langfuse = config.langfuse?.traces ? startLangfuseTracing(config.langfuse, { sessions: "run", environment: "eval" }) : null;
+const tracer = createTracer(runId, fileSink(tracePath), ...(langfuse ? [langfuse.sink] : []), (line) => {
   const l = JSON.parse(line) as CallLine;
   if (l.kind === "llm.call") calls.push(l);
 });
@@ -160,4 +162,6 @@ writeFileSync(
   ) + "\n",
 );
 console.log(`report      ${reportPath}`);
+await langfuse?.shutdown();
+if (langfuse) console.log(`langfuse    session ${runId} (environment eval)`);
 process.exitCode = errors.length ? 2 : t.underRated ? 1 : 0;

@@ -13,6 +13,7 @@ import { CLASSIFY_PROMPT, loadPrompt } from "../agent/classify.js";
 import { decide } from "../agent/decide.js";
 import { archiveMessage, loadArchive, threadUpTo } from "../eval/set.js";
 import { createTracer, fileSink } from "../trace.js";
+import { startLangfuseTracing } from "../trace-langfuse.js";
 
 const config = loadConfig();
 if (!config.llm.apiKey) throw new Error("OPENROUTER_API_KEY is not set in .env");
@@ -20,7 +21,8 @@ if (!config.llm.apiKey) throw new Error("OPENROUTER_API_KEY is not set in .env")
 const archive = loadArchive();
 const runId = `try-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const tracePath = `traces/${runId}.jsonl`;
-const tracer = createTracer(runId, fileSink(tracePath));
+const langfuse = config.langfuse?.traces ? startLangfuseTracing(config.langfuse, { sessions: "run", environment: "try" }) : null;
+const tracer = createTracer(runId, fileSink(tracePath), ...(langfuse ? [langfuse.sink] : []));
 // --prompt classify.v1 runs an older prompt, to compare versions on the same cases.
 const argv = process.argv.slice(2);
 const promptAt = argv.indexOf("--prompt");
@@ -65,3 +67,4 @@ const calls = readFileSync(tracePath, "utf8").trim().split("\n").map((l) => JSON
 const cost = calls.reduce((s, l) => s + (l.cost_usd ?? 0), 0);
 const served = [...new Set(calls.map((l) => l.provider))].join(", ");
 console.log(`${calls.length} LLM calls via ${served}, $${cost.toFixed(5)}, avg ${Math.round(calls.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / calls.length)} ms`);
+await langfuse?.shutdown();

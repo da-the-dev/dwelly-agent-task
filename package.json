@@ -19,6 +19,7 @@
     "llm:smoke": "npm run -s build && node --env-file=.env dist/tools/llm-smoke.js",
     "try:classify": "npm run -s build && node --env-file=.env dist/tools/try-classify.js",
     "eval": "npm run -s build && node --env-file=.env dist/tools/eval.js",
+    "prompts": "npm run -s build && node --env-file=.env dist/tools/prompts.js",
     "start:fake": "env -u DWELLY_BASE_URL -u DWELLY_TOKEN -u STATE_DB node --env-file=.env --env-file=.env.fake dist/main.js"
   },
   "devDependencies": {
@@ -28,6 +29,17 @@
     "vitest": "5.1.0"
   },
   "dependencies": {
+    "@langfuse/client": "6.1.0",
+    "@langfuse/core": "6.1.0",
+    "@langfuse/otel": "6.1.0",
+    "@langfuse/tracing": "6.1.0",
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/context-async-hooks": "2.12.0",
+    "@opentelemetry/core": "2.12.0",
+    "@opentelemetry/exporter-trace-otlp-http": "0.223.0",
+    "@opentelemetry/otlp-exporter-base": "0.223.0",
+    "@opentelemetry/sdk-trace-base": "2.12.0",
+    "@opentelemetry/sdk-trace-node": "2.12.0",
     "zod": "4.6.7"
   }
 }

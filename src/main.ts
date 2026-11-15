@@ -9,6 +9,7 @@ import { createSender } from "./agent/sender.js";
 import { loadConfig, maskToken, type Config } from "./config.js";
 import { openSqliteStore } from "./store/sqlite.js";
 import { createTracer, fileSink } from "./trace.js";
+import { startLangfuseTracing } from "./trace-langfuse.js";
 
 let config: Config;
 try {
@@ -30,7 +31,14 @@ const prompt = loadPrompt(CLASSIFY_PROMPT);
 
 const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const tracePath = `traces/${runId}.jsonl`;
-const tracer = createTracer(runId, fileSink(tracePath), (line) => console.log(line));
+// Langfuse is a viewer only: the JSONL file is the record, and a Langfuse failure never stops the agent.
+const langfuse = config.langfuse?.traces
+  ? startLangfuseTracing(config.langfuse, {
+      sessions: "case",
+      environment: /^http:\/\/(127\.0\.0\.1|localhost)/.test(config.baseUrl) ? "agent-fake" : "agent-live",
+    })
+  : null;
+const tracer = createTracer(runId, fileSink(tracePath), (line) => console.log(line), ...(langfuse ? [langfuse.sink] : []));
 const store = openSqliteStore(config.stateDb);
 const api = createApi({ baseUrl: config.baseUrl, token: config.token });
 
@@ -47,6 +55,7 @@ tracer.trace("run.start", {
   providers: config.llm.providers,
   prompt: prompt.version,
   open_case_out_of_scope: config.openCaseOutOfScope,
+  langfuse: langfuse ? config.langfuse?.baseUrl : "off",
 });
 
 await runLoop({
@@ -65,3 +74,4 @@ await runLoop({
   }),
 });
 await store.close();
+await langfuse?.shutdown();
