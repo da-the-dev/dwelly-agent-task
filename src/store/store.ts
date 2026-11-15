@@ -66,5 +66,13 @@ export interface Store {
    */
   recoverSending(): Promise<Action[]>;
 
+  // Read-only views for reports (npm run e2e). The agent itself never needs them.
+  /** Every case at its latest version, oldest first. */
+  allCases(): Promise<CaseRecord[]>;
+  /** Every action, in queue order. */
+  allActions(): Promise<Action[]>;
+  /** How many inbox events are in each status. */
+  inboxCounts(): Promise<Record<InboxStatus, number>>;
+
   close(): Promise<void>;
 }

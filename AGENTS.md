@@ -52,6 +52,8 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - Classifier on real archive cases, to read the full output by eye: `npm run try:classify -- case-05 case-04@6` (`@6` replays the thread up to `messages[6]`).
 - Prompts: `npm run prompts -- status` (files vs Langfuse), `pull classify [--version N]`, `push classify.vN [--label production]`.
 - Traces in Langfuse (https://cloud.langfuse.com): filter by environment `agent-fake`, `agent-live`, `eval` or `try`; a session is one case.
+- A run as a story, one block per case (message in → decision and why → calls and results → reply or "no reply"): `npm run story` (newest run in `traces/`), or `npm run story -- <trace.jsonl> [--case <id prefix>] [--full]`. Reads the trace only: no cost.
+- End to end in one command: `npm run e2e` (scenario `rung5`, ~$0.002) or `npm run e2e -- --scenario archive`. It starts `../dwelly-fake-world` (its `dist/`; run `npm run build` there after a change) on port 8788 and the real agent with a fresh `state/e2e-*.db`. When the run is over, it prints the story and the checks (`src/e2e/checks.ts`) and writes `e2e/runs/*.md`. Exit 1 = a check failed. Commit the report. The fake world does not read our messages, so e2e tests the mechanics; the evals test what we say.
 - Unit tests: `npm test`. End to end: start `../dwelly-fake-world` (`npm run dev` there), then `npm run build && npm run start:fake` here. Inspect `traces/*.jsonl` and `state/fake.db`. The 15 archive openers in ~15 s: `SCENARIO=archive SPEED=20 node dist/main.js` in the fake world; its `GET /_admin/state` lists the cases it received.
 
 ## Stack rules

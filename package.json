@@ -20,6 +20,8 @@
     "try:classify": "npm run -s build && node --env-file=.env dist/tools/try-classify.js",
     "eval": "npm run -s build && node --env-file=.env dist/tools/eval.js",
     "prompts": "npm run -s build && node --env-file=.env dist/tools/prompts.js",
+    "story": "npm run -s build && node dist/tools/story.js",
+    "e2e": "npm run -s build && node --env-file=.env dist/tools/e2e.js",
     "start:fake": "env -u DWELLY_BASE_URL -u DWELLY_TOKEN -u STATE_DB node --env-file=.env --env-file=.env.fake dist/main.js"
   },
   "devDependencies": {

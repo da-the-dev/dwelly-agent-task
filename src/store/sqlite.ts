@@ -134,6 +134,9 @@ export function openSqliteStore(path: string): Store {
     `UPDATE actions SET status = ?, error = COALESCE(?, error), result_id = COALESCE(?, result_id),
        sent_at = COALESCE(?, sent_at), attempts = attempts + ? WHERE id = ?`,
   );
+  const allCases = db.prepare("SELECT * FROM cases ORDER BY created_at, id");
+  const allActions = db.prepare(`SELECT * FROM actions ${ACTION_ORDER}`);
+  const inboxCounts = db.prepare("SELECT status, COUNT(*) AS n FROM inbox GROUP BY status");
   const sending = db.prepare(`SELECT * FROM actions WHERE status = 'sending' ${ACTION_ORDER}`);
   const recover = db.prepare(
     `UPDATE actions SET status = CASE kind WHEN 'case_patch' THEN 'pending' ELSE 'unknown' END,
@@ -253,6 +256,20 @@ export function openSqliteStore(path: string): Store {
       });
     },
 
+    async allCases() {
+      return (allCases.all() as Row[]).map((r) => toCase(r, Number(r["version"])));
+    },
+    async allActions() {
+      return (allActions.all() as Row[]).map(toAction);
+    },
+    async inboxCounts() {
+      const counts: Record<InboxStatus, number> = { pending: 0, done: 0, failed: 0 };
+      for (const r of inboxCounts.all() as Row[]) {
+        const status = String(r["status"]);
+        if (status === "pending" || status === "done" || status === "failed") counts[status] = Number(r["n"]);
+      }
+      return counts;
+    },
     async close() {
       db.close();
     },
