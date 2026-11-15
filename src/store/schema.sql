@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS actions (
   event_id      TEXT    NOT NULL,      -- inbox.id that caused it
   kind          TEXT    NOT NULL,      -- case_open | case_patch | msg_send
   body          TEXT    NOT NULL,      -- JSON request body (CaseCreate / CasePatch)
-  status        TEXT    NOT NULL,      -- pending | sending | sent | unknown | failed
+  status        TEXT    NOT NULL,      -- pending | sending | sent | unknown | failed | held (loop guard)
   attempts      INTEGER NOT NULL,
   result_id     TEXT,                  -- Dwelly case id from a 201
   error         TEXT,

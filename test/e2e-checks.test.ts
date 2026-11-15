@@ -111,6 +111,13 @@ describe("e2e checks", () => {
     expect(failedNames(inputs({ world, actions }, lines))).toEqual(["a landlord got a message only when they asked"]);
   });
 
+  it("a message held by the loop guard is a warning, not an unsent call or a missing safety line", () => {
+    const held = msg({ id: "act_h", to: "tenant_06", text: "(held by the loop guard: not written, not sent)", status: "held", sentAt: null, attempts: 0 });
+    const checks = checkRun(inputs({ actions: [msg({ to: "tenant_06", text: SAFETY }), held, open] }));
+    expect(failed(checks)).toEqual([]);
+    expect(checks.find((c) => c.name === "no message held by the loop guard")).toMatchObject({ level: "warn", ok: false });
+  });
+
   it("too many messages to one actor and a case needing review are warnings, not failures", () => {
     const outbox = Array.from({ length: 6 }, () => ({ to: { id: "tenant_06", role: "tenant" }, message: { body: SAFETY } }));
     const actions = [...outbox.map((_, i) => msg({ id: `act_${i}`, to: "tenant_06", text: SAFETY })), open];

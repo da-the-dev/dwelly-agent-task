@@ -210,14 +210,27 @@ describe("rung 5: messages from the handler", () => {
     expect(second).toMatchObject({ event_id: "evt_2", to: "landlord_09", reasons: ["asked"], body: { body: "Reply 2." } });
   });
 
-  it("the loop guard stops a sixth message in a row while the case does not move", async () => {
+  it("the loop guard stops the sixth message in a row and every one after it while the case does not move", async () => {
     const asks = (i: number) => answer({ next_step: "need_info", open_questions: [`question ${i}?`] });
-    const t = setup([1, 2, 3, 4, 5, 6].map(asks));
-    for (const i of [1, 2, 3, 4, 5, 6]) await t.handle(message(`evt_${i}`, `answer ${i}`));
+    const t = setup([1, 2, 3, 4, 5, 6, 7].map(asks));
+    for (const i of [1, 2, 3, 4, 5, 6, 7]) await t.handle(message(`evt_${i}`, `answer ${i}`));
     expect(t.queued("msg_send")).toHaveLength(5);
-    expect(t.line("speak.loop_guard")).toMatchObject({ event_id: "evt_6", to: "tenant_09" });
+    expect(t.lines.filter((l) => l["kind"] === "speak.loop_guard").map((l) => l["event_id"])).toEqual(["evt_6", "evt_7"]);
     const caseId = String(t.line("case.version")?.["case_id"]);
     expect((await t.store.getCase(caseId))?.needsReview).toBe(true);
+    // the stopped messages are kept as 'held' (never sent, never written): a person decides
+    const held = (await t.store.actionsForCase(caseId)).filter((a) => a.status === "held");
+    expect(held.map((a) => [a.kind, a.eventId])).toEqual([["msg_send", "evt_6"], ["msg_send", "evt_7"]]);
+    expect(t.writes()).toBe(5);
+    expect((await t.store.pendingActions(50)).some((a) => a.status === "held")).toBe(false);
+  });
+
+  it("after the loop guard, a move of the case lets messages through again", async () => {
+    const asks = (i: number) => answer({ next_step: "need_info", open_questions: [`question ${i}?`] });
+    const t = setup([...[1, 2, 3, 4, 5, 6].map(asks), answer({ next_step: "contractor", open_questions: [] })]);
+    for (const i of [1, 2, 3, 4, 5, 6, 7]) await t.handle(message(`evt_${i}`, `answer ${i}`));
+    // evt_7: need_info -> contractor (waiting_on tenant -> contractor): the case moved
+    expect(t.queued("msg_send").map((l) => l["event_id"])).toEqual(["evt_1", "evt_2", "evt_3", "evt_4", "evt_5", "evt_7"]);
   });
 
   it("needs_review stays set: a later good answer does not clear it; only a person does (review 16 Nov)", async () => {

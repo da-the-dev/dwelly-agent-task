@@ -100,6 +100,9 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     const reporterName =
       next.reporter === message.actor.id ? message.actor.name : next.reporter ? ((await store.getActor(next.reporter))?.name ?? null) : null;
     let recipients = speakFor(current, next, message, reporterName);
+    // A stopped message is kept as a `held` action: it counts in the streak, so the 7th, 8th…
+    // are held too until the case moves (review, 16 Nov). The sender never sends it.
+    const held: NewAction[] = [];
     if (current && recipients.length) {
       const past = await pastTurns(store, current.id);
       const now_ = { status: next.status, waitingOn: next.waitingOn, urgency: next.urgency };
@@ -108,7 +111,12 @@ export function createHandler(deps: HandlerDeps): EventHandler {
         next = { ...next, needsReview: true };
         recipients = recipients.filter((x) => !stopped.includes(x));
         for (const x of stopped) {
-          tracer.trace("speak.loop_guard", { event_id: event.id, case_id: next.id, to: x.to, reasons: x.reasons, limit: LOOP_LIMIT });
+          const id = `act_${randomUUID()}`;
+          held.push({ id, kind: "msg_send", status: "held", body: { to: x.to, body: "(held by the loop guard: not written, not sent)" } });
+          tracer.trace("speak.loop_guard", {
+            event_id: event.id, case_id: next.id, to: x.to, reasons: x.reasons, limit: LOOP_LIMIT, action_id: id, needs_review: true,
+            review_reason: `loop guard: ${LOOP_LIMIT} messages in a row to ${x.to} while the case did not move`,
+          });
         }
       }
     }
@@ -131,7 +139,7 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     };
     const plan = actionsFor(current, next, { openCaseOutOfScope: deps.openCaseOutOfScope });
     // Messages first: a safety text must not wait behind POST /cases.
-    const { applied } = await store.saveCaseVersion(version, [...messages.map((m) => m.action), ...plan.actions]);
+    const { applied } = await store.saveCaseVersion(version, [...messages.map((m) => m.action), ...held, ...plan.actions]);
 
     tracer.trace("case.version", {
       event_id: event.id,

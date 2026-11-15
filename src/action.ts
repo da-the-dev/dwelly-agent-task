@@ -8,7 +8,8 @@ export type ActionStatus =
   | "sending" //  marked just before the HTTP call; found at startup = we crashed mid-call
   | "sent" //     the world answered 2xx
   | "unknown" //  a POST whose outcome we cannot know (timeout, network, 5xx): never re-sent
-  | "failed"; //  the world rejected it (4xx): our bug, a person should look
+  | "failed" //   the world rejected it (4xx): our bug, a person should look
+  | "held"; //    a message the loop guard stopped: never written, never sent; a person decides
 
 /** A message to one actor (rung 5): who gets it, plus the spec's ActorMessage body. */
 export type MessageSend = { to: string } & ActorMessage;
@@ -18,10 +19,11 @@ export type ActionRequest =
   | { kind: "case_patch"; body: CasePatch }
   | { kind: "msg_send"; body: MessageSend };
 
-/** What the handler queues; the store adds the rest. */
-export type NewAction = ActionRequest & { id: string };
+/** What the handler queues; the store adds the rest. Status: pending unless it is held. */
+export type NewAction = ActionRequest & { id: string; status?: "held" };
 
-export type Action = NewAction & {
+export type Action = ActionRequest & {
+  id: string;
   caseId: string;
   /** The case version that queued it; with `seq`, the order to send a case's actions in. */
   caseVersion: number;

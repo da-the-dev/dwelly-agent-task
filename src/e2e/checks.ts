@@ -60,7 +60,8 @@ export function checkRun(r: RunInputs): Check[] {
   );
 
   // 2. Every call we queued was made and answered.
-  const notSent = r.actions.filter((a) => a.status !== "sent");
+  // A message held by the loop guard is not an unsent call: a person decides (check 11b).
+  const notSent = r.actions.filter((a) => a.status !== "sent" && a.status !== "held");
   check(
     "every queued call was sent",
     "fail",
@@ -128,7 +129,7 @@ export function checkRun(r: RunInputs): Check[] {
   const missingSafety: string[] = [];
   let emergencyMessages = 0;
   for (const a of r.actions) {
-    if (a.kind !== "msg_send") continue;
+    if (a.kind !== "msg_send" || a.status === "held") continue;
     const t = turnOf.get(`${a.caseId} ${a.eventId}`);
     const reporter = r.cases.find((c) => c.id === a.caseId)?.reporter;
     const openEmergency = t?.urgency === "emergency" && t.status !== "closed" && t.status !== "resolved";
@@ -164,6 +165,14 @@ export function checkRun(r: RunInputs): Check[] {
     "no case needs review",
     "warn",
     r.cases.filter((c) => c.needsReview).map((c) => `${short(c.id)} "${c.title}"`),
+    "none",
+  );
+
+  // 11b. Messages the loop guard held: never written, never sent.
+  check(
+    "no message held by the loop guard",
+    "warn",
+    r.actions.filter((a) => a.status === "held").map((a) => `${a.eventId} to ${a.kind === "msg_send" ? a.body.to : "?"} on ${short(a.caseId)}`),
     "none",
   );
 

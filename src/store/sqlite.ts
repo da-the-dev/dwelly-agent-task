@@ -124,7 +124,7 @@ export function openSqliteStore(path: string): Store {
 
   const insertAction = db.prepare(
     `INSERT INTO actions (id, case_id, case_version, seq, event_id, kind, body, status, attempts, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
   );
   const ACTION_ORDER = "ORDER BY created_at, case_id, case_version, seq";
   const pendingActions = db.prepare(`SELECT * FROM actions WHERE status = 'pending' ${ACTION_ORDER} LIMIT ?`);
@@ -225,7 +225,7 @@ export function openSqliteStore(path: string): Store {
         const applied = writeVersion(v);
         if (applied) {
           actions.forEach((a, seq) =>
-            insertAction.run(a.id, v.id, v.version, seq, v.causeId, a.kind, JSON.stringify(a.body), v.updatedAt),
+            insertAction.run(a.id, v.id, v.version, seq, v.causeId, a.kind, JSON.stringify(a.body), a.status ?? "pending", v.updatedAt),
           );
         }
         return { applied };
