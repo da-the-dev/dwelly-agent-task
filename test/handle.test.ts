@@ -280,6 +280,26 @@ describe("rung 5: messages from the handler", () => {
     await handle(message("evt_2", "the bathroom tap now drips"));
     expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => l["linked_by"])).toEqual(["new", "new"]);
   });
+
+  it("the 72 h window counts from the close, not from the last joined message (review 16 Nov)", async () => {
+    let now = "2026-11-11T12:00:00.000Z";
+    const lines: Record<string, unknown>[] = [];
+    const closed = answer({ urgency: "low", next_step: "log_only" });
+    const handle = createHandler({
+      store: openSqliteStore(":memory:"),
+      tracer: createTracer("t3", (l) => lines.push(JSON.parse(l))),
+      classify: { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(CLASSIFY_PROMPT), tracer: createTracer("x", () => {}), fetchImpl: fakeLlm([closed]) },
+      writer: { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(REPLY_PROMPT), tracer: createTracer("x", () => {}), fetchImpl: fakeLlm([JSON.stringify({ body: "ok" })]), emergencyNumber: "999" },
+      openCaseOutOfScope: true,
+      now: () => now,
+    });
+    await handle(message("evt_1", "a small scuff on the hallway wall")); // closed at once (log_only)
+    now = "2026-11-14T10:00:00.000Z"; // 70 h after the close: joins
+    await handle(message("evt_2", "Thanks, will do."));
+    now = "2026-11-14T13:00:00.000Z"; // 73 h after the close: a new report
+    await handle(message("evt_3", "another scuff by the door"));
+    expect(lines.filter((l) => l["kind"] === "case.version").map((l) => l["linked_by"])).toEqual(["new", "recent_closed_case", "new"]);
+  });
 });
 
 /** A fake OpenRouter that always answers with the same content. */

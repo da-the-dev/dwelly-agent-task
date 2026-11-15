@@ -73,7 +73,10 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     }
     if (!current && propertyId && message.actor.role === "tenant") {
       const latest = await store.findLatestCase(propertyId, message.actor.id);
-      if (latest && isClosed(latest) && Date.parse(now()) - Date.parse(latest.updatedAt) <= REOPEN_WINDOW_MS) {
+      // The window counts from the close, not from updatedAt: each joined message writes a
+      // version, and that must not keep the case open to joins for ever (review, 16 Nov).
+      const closedAt = latest && isClosed(latest) ? await closedSince(store, latest.id) : null;
+      if (latest && closedAt && Date.parse(now()) - Date.parse(closedAt) <= REOPEN_WINDOW_MS) {
         current = latest;
         linkedBy = "recent_closed_case";
       }
@@ -184,6 +187,18 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       tracer.trace("action.skipped", { event_id: event.id, case_id: next.id, action: "case_open", reason: plan.skipped });
     }
   };
+}
+
+/** When the case closed: the first version of its last run of closed versions. */
+async function closedSince(store: Store, caseId: string): Promise<string | null> {
+  const history = await store.caseHistory(caseId);
+  let at: string | null = null;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const v = history[i];
+    if (!v || !isClosed(v)) break;
+    at = v.updatedAt;
+  }
+  return at;
 }
 
 /** The case's past versions caused by events, with who got a message from each. */
