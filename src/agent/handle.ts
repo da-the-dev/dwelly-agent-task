@@ -1,14 +1,16 @@
-// The event handler the loop calls for each inbox event. Rung 2: for a message, find its
-// case, decide (classify -> safety floor -> state), save the next case version, and trace
-// what rungs 3 and 5 WOULD do. Nothing is sent to the world yet.
+// The event handler the loop calls for each inbox event. For a message: find its case,
+// decide (classify -> safety floor -> state), and save the next case version together with
+// the outbox actions it needs (rung 3: POST / PATCH /cases). The handler makes no world
+// call itself; the sender does, after the batch. What rung 5 would say is traced only.
 //
 // Delivery is at-least-once, so the handler is idempotent: an event that already produced
 // a case version is skipped BEFORE the LLM call (no cost, and no duplicate case even if
-// the first one has closed since).
+// the first one has closed since), and a version saved twice queues its actions once.
 import { changedFields, type CaseRecord, type CaseVersion } from "../case.js";
 import type { WorldEvent } from "../api/types.js";
 import type { Store } from "../store/store.js";
 import type { Tracer } from "../trace.js";
+import { actionsFor } from "./actions.js";
 import type { ClassifyDeps } from "./classify.js";
 import { decide } from "./decide.js";
 import type { EventHandler } from "./loop.js";
@@ -18,7 +20,7 @@ export interface HandlerDeps {
   store: Store;
   tracer: Tracer;
   classify: ClassifyDeps;
-  /** Config OPEN_CASE_OUT_OF_SCOPE: whether rung 3 would open a Dwelly case for out_of_scope. */
+  /** Config OPEN_CASE_OUT_OF_SCOPE: whether rung 3 opens a Dwelly case for out_of_scope. */
   openCaseOutOfScope: boolean;
   now?: () => string;
 }
@@ -65,7 +67,8 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       changed: changedFields(current, next),
       why: r.why,
     };
-    const { applied } = await store.saveCaseVersion(version);
+    const plan = actionsFor(current, next, { openCaseOutOfScope: deps.openCaseOutOfScope });
+    const { applied } = await store.saveCaseVersion(version, plan.actions);
 
     tracer.trace("case.version", {
       event_id: event.id,
@@ -90,26 +93,14 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     });
     if (!applied) return;
 
-    // What the next rungs would do with this decision. Traced only.
-    if (!current) {
-      const skip = next.nextStep === "out_of_scope" && !deps.openCaseOutOfScope;
-      tracer.trace("intent.case_open", {
-        event_id: event.id,
-        case_id: next.id,
-        title: next.title,
-        urgency: next.urgency,
-        property_id: next.propertyId,
-        ...(skip ? { skipped: "OPEN_CASE_OUT_OF_SCOPE=false" } : {}),
-      });
-    } else if (current.urgency !== next.urgency || current.status !== next.status) {
-      tracer.trace("intent.case_patch", {
-        event_id: event.id,
-        case_id: next.id,
-        dwelly_case_id: next.dwellyCaseId,
-        ...(current.urgency !== next.urgency ? { urgency: { from: current.urgency, to: next.urgency } } : {}),
-        ...(current.status !== next.status ? { status: { from: current.status, to: next.status } } : {}),
-      });
+    // Rung 3: queued in the same transaction as the version; the sender makes the calls.
+    for (const a of plan.actions) {
+      tracer.trace("action.queued", { event_id: event.id, case_id: next.id, action_id: a.id, action: a.kind, body: a.body });
     }
+    if (plan.skipped) {
+      tracer.trace("action.skipped", { event_id: event.id, case_id: next.id, action: "case_open", reason: plan.skipped });
+    }
+    // Rung 5: what we would tell the tenant. Traced only.
     if (r.safetyAdvice || next.openQuestions.length) {
       tracer.trace("intent.message_tenant", {
         event_id: event.id,

@@ -55,8 +55,8 @@ function setup(answers: string[], openCaseOutOfScope = true) {
 
 const gas = "There's a strong smell of gas in the entrance hall.";
 
-describe("rung 2 handler", () => {
-  it("a new problem becomes version 1 of a new case, with the intents for rungs 3 and 5", async () => {
+describe("message handler (rungs 2-3)", () => {
+  it("a new problem becomes version 1 of a new case, with its Dwelly calls queued and rung 5 traced", async () => {
     const t = setup([answer({ urgency: "emergency", next_step: "external", safety_advice: "Leave the building." })]);
     await t.handle(message("evt_1", gas));
 
@@ -64,7 +64,12 @@ describe("rung 2 handler", () => {
     expect(await t.store.getCase(caseId)).toMatchObject({
       version: 1, urgency: "emergency", nextStep: "external", status: "in_progress", waitingOn: "external", propertyId: "prop_09", reporter: "tenant_09",
     });
-    expect(t.kinds()).toEqual(["case.version", "intent.case_open", "intent.message_tenant"]);
+    expect(t.kinds()).toEqual(["case.version", "action.queued", "action.queued", "intent.message_tenant"]);
+    // gas is external (in_progress), and a Dwelly case is created open: POST, then PATCH
+    const queued = await t.store.actionsForCase(caseId);
+    expect(queued.map((a) => [a.kind, a.status, a.eventId])).toEqual([["case_open", "pending", "evt_1"], ["case_patch", "pending", "evt_1"]]);
+    expect(queued[0]?.body).toMatchObject({ urgency: "emergency", property_id: "prop_09" });
+    expect(queued[1]?.body).toEqual({ status: "in_progress" });
     expect(t.line("case.version")).toMatchObject({ event_id: "evt_1", linked_by: "new", applied: true });
     expect(t.line("intent.message_tenant")).toMatchObject({ to: "tenant_09", safety_advice: "Leave the building." });
   });
@@ -78,7 +83,10 @@ describe("rung 2 handler", () => {
     const history = await t.store.caseHistory(caseId);
     expect(history.map((h) => [h.version, h.causeId, h.urgency])).toEqual([[1, "evt_1", "medium"], [2, "evt_2", "high"]]);
     expect(history[1]?.changed).toContain("urgency");
-    expect(t.line("intent.case_patch")).toMatchObject({ case_id: caseId, urgency: { from: "medium", to: "high" } });
+    expect((await t.store.actionsForCase(caseId)).map((a) => [a.kind, a.body, a.caseVersion])).toEqual([
+      ["case_open", expect.objectContaining({ urgency: "medium" }), 1],
+      ["case_patch", { urgency: "high" }, 2],
+    ]);
     expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => l["linked_by"])).toEqual(["new", "open_case_at_property"]);
   });
 
@@ -97,6 +105,7 @@ describe("rung 2 handler", () => {
     await t.handle(message("evt_1", "the neighbours upstairs are stomping at 2am"));
     expect(t.calls()).toBe(1);
     expect(t.lines.filter((l) => l["kind"] === "case.version")).toHaveLength(1);
+    expect(await t.store.pendingActions(10)).toHaveLength(2); // POST + PATCH closed, queued once
   });
 
   it("ignores events that are not messages, without calling the LLM", async () => {
@@ -112,10 +121,11 @@ describe("rung 2 handler", () => {
     expect(t.line("case.version")).toMatchObject({ needs_review: true, urgency: "emergency", next_step: "external", attempts: 2 });
   });
 
-  it("OPEN_CASE_OUT_OF_SCOPE=false: the case is kept, opening it in Dwelly is marked skipped", async () => {
+  it("OPEN_CASE_OUT_OF_SCOPE=false: the case is kept, nothing is queued, the skip is traced", async () => {
     const t = setup([answer({ urgency: "low", next_step: "out_of_scope" })], false);
     await t.handle(message("evt_1", "the neighbours upstairs are stomping at 2am"));
-    expect(t.line("intent.case_open")).toMatchObject({ skipped: "OPEN_CASE_OUT_OF_SCOPE=false" });
+    expect(t.line("action.skipped")).toMatchObject({ action: "case_open", reason: "OPEN_CASE_OUT_OF_SCOPE=false" });
+    expect(await t.store.pendingActions(10)).toEqual([]);
   });
 
   it("a message without a property in the payload uses the property we know for the sender", async () => {
