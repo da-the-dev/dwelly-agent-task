@@ -1,9 +1,11 @@
 // The agent service. Rung 1: poll the world's events into the inbox. Rung 2: classify each
-// message into a version of our own case, and trace what rungs 3 and 5 would do.
+// message into a version of our own case. Rung 3: queue and send POST / PATCH /cases from
+// an outbox after each batch. What rung 5 would say is traced only.
 import { createApi } from "./api/client.js";
 import { CLASSIFY_PROMPT, loadPrompt } from "./agent/classify.js";
 import { createHandler } from "./agent/handle.js";
 import { runLoop } from "./agent/loop.js";
+import { createSender } from "./agent/sender.js";
 import { loadConfig, maskToken, type Config } from "./config.js";
 import { openSqliteStore } from "./store/sqlite.js";
 import { createTracer, fileSink } from "./trace.js";
@@ -53,6 +55,7 @@ await runLoop({
   tracer,
   intervalMs: config.pollIntervalMs,
   signal: stop.signal,
+  afterBatch: createSender({ api, store, tracer }).drain,
   // The raw event is in the inbox; the decision is in the case.version trace line.
   handle: createHandler({
     store,

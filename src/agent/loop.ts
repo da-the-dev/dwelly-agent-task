@@ -2,6 +2,7 @@
 //   1. GET /events?after=<cursor>
 //   2. store the batch + the new cursor in one transaction (dedup by event id)
 //   3. process pending inbox events oldest first, marking each done or failed
+//   4. afterBatch: send the outbox (rung 3)
 // A crash between 1 and 2 re-fetches the same batch (cursor not moved). A crash during 3
 // leaves the event pending, so it is processed again on restart: at-least-once.
 import type { WorldEvent } from "../api/types.js";
@@ -18,6 +19,11 @@ export interface LoopDeps {
   store: Store;
   tracer: Tracer;
   handle: EventHandler;
+  /**
+   * Runs after the batch's events are handled: the outbox sender (rung 3). Its errors are
+   * traced and never stop the poll.
+   */
+  afterBatch?: () => Promise<unknown>;
   batchSize?: number;
 }
 
@@ -29,7 +35,7 @@ export interface TickResult {
   full: boolean;
 }
 
-export async function tick({ api, store, tracer, handle, batchSize = 100 }: LoopDeps): Promise<TickResult> {
+export async function tick({ api, store, tracer, handle, afterBatch, batchSize = 100 }: LoopDeps): Promise<TickResult> {
   const after = await store.getCursor();
   const res = await api.getEvents(after, batchSize);
   const inserted = await store.saveBatch(res.events, res.next_cursor);
@@ -50,6 +56,14 @@ export async function tick({ api, store, tracer, handle, batchSize = 100 }: Loop
       tracer.trace("event.failed", { event_id: event.id, error: message });
     }
     processed++;
+  }
+
+  if (afterBatch) {
+    try {
+      await afterBatch();
+    } catch (err) {
+      tracer.trace("send.error", { error: describeError(err) });
+    }
   }
   return { fetched: res.events.length, inserted, processed, full: res.events.length === batchSize };
 }
