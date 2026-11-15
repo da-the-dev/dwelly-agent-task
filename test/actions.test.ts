@@ -56,6 +56,15 @@ describe("actionsFor", () => {
     expect(plan).toEqual({ actions: [], skipped: "OPEN_CASE_OUT_OF_SCOPE=false" });
   });
 
+  it("never opened in Dwelly (flag off), then it becomes a repair: a POST, never a lone PATCH (review 16 Nov)", () => {
+    const off = { openCaseOutOfScope: false, opened: false };
+    const noise = { ...base, nextStep: "out_of_scope" as const, status: "closed" as const, waitingOn: "none" as const, urgency: "low" as const };
+    const leak = { ...base, nextStep: "contractor" as const, status: "open" as const, waitingOn: "contractor" as const, urgency: "medium" as const, version: 2 };
+    expect(actionsFor(noise, leak, off, id).actions.map((a) => a.kind)).toEqual(["case_open"]);
+    // still out of scope: still nothing
+    expect(actionsFor(noise, { ...noise, version: 2 }, off, id)).toEqual({ actions: [], skipped: "OPEN_CASE_OUT_OF_SCOPE=false" });
+  });
+
   it("urgency up on an existing case (04 at messages[6]): one PATCH with only the urgency", () => {
     const plan = actionsFor(base, { ...base, urgency: "high", summary: "now reaching the flat below", version: 2 }, on, id);
     expect(plan.actions.map((a) => [a.kind, a.body])).toEqual([["case_patch", { urgency: "high" }]]);

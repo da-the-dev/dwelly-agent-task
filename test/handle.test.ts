@@ -281,6 +281,14 @@ describe("rung 5: messages from the handler", () => {
     expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => l["linked_by"])).toEqual(["new", "new"]);
   });
 
+  it("OPEN_CASE_OUT_OF_SCOPE=false: kept only by us, then a repair at the same property opens it in Dwelly (POST, not PATCH)", async () => {
+    const t = setup([answer({ urgency: "low", next_step: "out_of_scope" }), answer({ urgency: "medium", next_step: "contractor" })], false);
+    await t.handle(message("evt_1", "the neighbours upstairs are stomping at 2am"));
+    await t.handle(message("evt_2", "Also the kitchen tap now drips."));
+    expect(t.queued("case_open").map((l) => l["event_id"])).toEqual(["evt_2"]);
+    expect(t.queued("case_patch")).toHaveLength(0);
+  });
+
   it("the 72 h window counts from the close, not from the last joined message (review 16 Nov)", async () => {
     let now = "2026-11-11T12:00:00.000Z";
     const lines: Record<string, unknown>[] = [];

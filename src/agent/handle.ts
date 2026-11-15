@@ -140,7 +140,8 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       changed: changedFields(current, next),
       why: r.why,
     };
-    const plan = actionsFor(current, next, { openCaseOutOfScope: deps.openCaseOutOfScope });
+    const opened = current ? (await store.actionsForCase(current.id)).some((a) => a.kind === "case_open") : false;
+    const plan = actionsFor(current, next, { openCaseOutOfScope: deps.openCaseOutOfScope, opened });
     // Messages first: a safety text must not wait behind POST /cases.
     const { applied } = await store.saveCaseVersion(version, [...messages.map((m) => m.action), ...held, ...plan.actions]);
 

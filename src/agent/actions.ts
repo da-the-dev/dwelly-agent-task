@@ -1,7 +1,8 @@
 // Rung 3: which world-changing calls a new case version needs. Pure: the handler saves the
 // result with the version (one transaction) and the sender makes the calls later.
 //
-//   new case                     -> POST /cases  (+ PATCH status if it is not "open")
+//   new case, or a case never    -> POST /cases  (+ PATCH status if it is not "open")
+//   opened in Dwelly before
 //   out_of_scope, flag off       -> nothing (our own case is still kept)
 //   urgency or status changed    -> PATCH /cases/{id} with only those fields
 //   anything else                -> nothing (the description is not kept in sync: every
@@ -14,6 +15,9 @@ import type { CaseRecord } from "../case.js";
 export interface ActionsConfig {
   /** OPEN_CASE_OUT_OF_SCOPE: open a Dwelly case for an out-of-scope report too. */
   openCaseOutOfScope: boolean;
+  /** A case_open was queued for this case before. False: an out-of-scope case kept only by
+   *  us (flag off) that may now need its POST. Default true. */
+  opened?: boolean;
 }
 
 export interface ActionPlan {
@@ -42,7 +46,9 @@ export function actionsFor(
   cfg: ActionsConfig,
   newId: () => string = () => `act_${randomUUID()}`,
 ): ActionPlan {
-  if (!prev) {
+  // A case we never opened in Dwelly is still "new" to Dwelly: POST, never a lone PATCH
+  // (review, 16 Nov: OPEN_CASE_OUT_OF_SCOPE=false, then a repair, used to queue a PATCH).
+  if (!prev || cfg.opened === false) {
     if (next.nextStep === "out_of_scope" && !cfg.openCaseOutOfScope) {
       return { actions: [], skipped: "OPEN_CASE_OUT_OF_SCOPE=false" };
     }
