@@ -72,7 +72,7 @@ npm run prompts -- status # the files in prompts/ compared with Langfuse
 7. A live failure becomes an eval item in `evals/scenarios.json`. Run it with `--only <id> --runs 3`, fix it, then run it again.
 
 ### Against the local fake world
-The fake world is a local copy of the Dwelly API for tests (`../dwelly-fake-world`). The fastest way is `npm run e2e`: it starts the world and the agent, waits for the end of the run and checks the result. It writes a report to `e2e/runs/`.
+The fake world is a local copy of the Dwelly API for tests: [da-the-dev/dwelly-fake-world](https://github.com/da-the-dev/dwelly-fake-world). Clone it next to this repo, as `../dwelly-fake-world`. The fastest way is `npm run e2e`: it starts the world and the agent, waits for the end of the run and checks the result. It writes a report to `e2e/runs/`.
 
 To run the two parts by hand:
 ```sh
