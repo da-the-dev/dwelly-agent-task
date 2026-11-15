@@ -1,7 +1,7 @@
 // A world-changing call we have decided to make: the outbox row. It is written in the same
 // transaction as the case version that caused it, BEFORE any HTTP call ("record the intent
 // before the call"), and the sender (src/agent/sender.ts) works through it afterwards.
-import type { CaseCreate, CasePatch } from "./api/types.js";
+import type { ActorMessage, CaseCreate, CasePatch } from "./api/types.js";
 
 export type ActionStatus =
   | "pending" //  waiting to be sent (also: retry after 429 / 403 / a PATCH that timed out)
@@ -10,9 +10,13 @@ export type ActionStatus =
   | "unknown" //  a POST whose outcome we cannot know (timeout, network, 5xx): never re-sent
   | "failed"; //  the world rejected it (4xx): our bug, a person should look
 
+/** A message to one actor (rung 5): who gets it, plus the spec's ActorMessage body. */
+export type MessageSend = { to: string } & ActorMessage;
+
 export type ActionRequest =
   | { kind: "case_open"; body: CaseCreate }
-  | { kind: "case_patch"; body: CasePatch };
+  | { kind: "case_patch"; body: CasePatch }
+  | { kind: "msg_send"; body: MessageSend };
 
 /** What the handler queues; the store adds the rest. */
 export type NewAction = ActionRequest & { id: string };
@@ -26,7 +30,7 @@ export type Action = NewAction & {
   eventId: string;
   status: ActionStatus;
   attempts: number;
-  /** The Dwelly case id from a successful POST. */
+  /** The Dwelly case id from a successful POST /cases. */
   resultId: string | null;
   error: string | null;
   createdAt: string;

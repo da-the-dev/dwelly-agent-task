@@ -135,7 +135,7 @@ export function openSqliteStore(path: string): Store {
   );
   const sending = db.prepare(`SELECT * FROM actions WHERE status = 'sending' ${ACTION_ORDER}`);
   const recover = db.prepare(
-    `UPDATE actions SET status = CASE kind WHEN 'case_open' THEN 'unknown' ELSE 'pending' END,
+    `UPDATE actions SET status = CASE kind WHEN 'case_patch' THEN 'pending' ELSE 'unknown' END,
        error = 'interrupted mid-call (process stopped)' WHERE status = 'sending'`,
   );
 

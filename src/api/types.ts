@@ -14,6 +14,7 @@ export type WorkOrder = S["WorkOrder"];
 export type WorkOrderCreate = S["WorkOrderCreate"];
 export type WorkOrderUpdate = S["WorkOrderUpdate"];
 export type ActorMessage = S["ActorMessage"];
+export type ActorMessageAccepted = S["ActorMessageAccepted"];
 export type ApiError = S["Error"];
 export type HistoryCase = S["HistoryCase"];
 export type HistoryCasesResponse = S["HistoryCasesResponse"];

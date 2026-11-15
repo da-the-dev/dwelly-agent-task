@@ -57,9 +57,10 @@ export interface Store {
    */
   markAction(id: string, update: ActionUpdate, version?: CaseVersion): Promise<void>;
   /**
-   * After a crash mid-call: a `sending` case_open becomes `unknown` (it may have created a
-   * case), a `sending` case_patch goes back to `pending` (PATCH is idempotent). Returns
-   * the actions as they were before the change.
+   * After a crash mid-call: a `sending` case_patch goes back to `pending` (PATCH is
+   * idempotent); a `sending` case_open or msg_send becomes `unknown` (it may have happened).
+   * The sender may then put an emergency message back to `pending` (its one re-send).
+   * Returns the actions as they were before the change.
    */
   recoverSending(): Promise<Action[]>;
 

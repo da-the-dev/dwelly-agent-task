@@ -44,3 +44,14 @@ describe("case endpoints", () => {
     await expect(createApi(cfg, f.impl).createCase({ title: "x", urgency: "low" })).rejects.toThrow(/unexpected body/);
   });
 });
+
+describe("message endpoint (rung 5)", () => {
+  it("POST /actors/{id}/messages sends subject and body; a 202 must say accepted", async () => {
+    const f = fakeFetch(202, { status: "accepted", note: "queued" });
+    const r = await createApi(cfg, f.impl).sendMessage("tenant 09", { subject: "Gas", body: "Leave now." });
+    expect(r.status).toBe("accepted");
+    expect(f.calls[0]?.url).toBe("https://world.test/actors/tenant%2009/messages");
+    expect(JSON.parse(String(f.calls[0]?.init.body))).toEqual({ subject: "Gas", body: "Leave now." });
+    await expect(createApi(cfg, fakeFetch(202, { ok: true }).impl).sendMessage("t", { body: "x" })).rejects.toThrow(/unexpected body/);
+  });
+});

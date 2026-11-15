@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS actions (
   case_version  INTEGER NOT NULL,      -- the version that queued it
   seq           INTEGER NOT NULL,      -- position among that version's actions
   event_id      TEXT    NOT NULL,      -- inbox.id that caused it
-  kind          TEXT    NOT NULL,      -- case_open | case_patch
+  kind          TEXT    NOT NULL,      -- case_open | case_patch | msg_send
   body          TEXT    NOT NULL,      -- JSON request body (CaseCreate / CasePatch)
   status        TEXT    NOT NULL,      -- pending | sending | sent | unknown | failed
   attempts      INTEGER NOT NULL,

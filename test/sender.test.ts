@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { NewAction } from "../src/action.js";
 import { ApiError, type Api } from "../src/api/client.js";
-import type { Case } from "../src/api/types.js";
+import type { ActorMessageAccepted, Case } from "../src/api/types.js";
 import { createSender } from "../src/agent/sender.js";
 import { changedFields, type CaseRecord } from "../src/case.js";
 import { tick } from "../src/agent/loop.js";
@@ -30,29 +30,34 @@ const base: CaseRecord = {
 };
 const open: NewAction = { id: "act_1", kind: "case_open", body: { title: base.title, urgency: "emergency", property_id: "prop_05" } };
 const patch: NewAction = { id: "act_2", kind: "case_patch", body: { status: "in_progress" } };
+const msg: NewAction = { id: "act_m", kind: "msg_send", body: { to: "tenant_05", subject: "Gas", body: "Leave now." } };
+const accepted = { status: "accepted", note: "queued" } as ActorMessageAccepted;
+const timeout = () => new DOMException("The operation was aborted due to timeout", "TimeoutError");
 
-type Reply = Case | Error;
+type Reply = Case | ActorMessageAccepted | Error;
 const ok = (id = "d-1") => ({ id }) as Case;
 const status = (s: number) => new ApiError(s, "X", "/cases", { error: `e${s}` });
 
 /** A world that answers each call with the next scripted reply, and records the calls. */
 function world(replies: Reply[]) {
   const calls: string[] = [];
-  const next = (call: string) => {
+  const next = <T>(call: string, fallback: T): Promise<T> => {
     calls.push(call);
-    const r = replies.shift() ?? ok();
-    return r instanceof Error ? Promise.reject(r) : Promise.resolve(r);
+    const r = replies.shift() ?? fallback;
+    return r instanceof Error ? Promise.reject(r) : Promise.resolve(r as T);
   };
-  const api: Pick<Api, "createCase" | "patchCase"> = {
-    createCase: (b) => next(`POST ${b.urgency}`),
-    patchCase: (id, b) => next(`PATCH ${id} ${JSON.stringify(b)}`),
+  const api: Pick<Api, "createCase" | "patchCase" | "sendMessage"> = {
+    createCase: (b) => next(`POST ${b.urgency}`, ok()),
+    patchCase: (id, b) => next(`PATCH ${id} ${JSON.stringify(b)}`, ok()),
+    sendMessage: (to, b) => next(`MSG ${to} ${b.body}`, accepted),
   };
   return { api, calls };
 }
 
-async function setup(replies: Reply[], actions: NewAction[] = [open, patch]) {
+async function setup(replies: Reply[], actions: NewAction[] = [open, patch], change: Partial<CaseRecord> = {}) {
   const store = openSqliteStore(":memory:");
-  await store.saveCaseVersion({ ...base, causeKind: "event", causeId: "evt_5", changed: changedFields(null, base), why: "gas" }, actions);
+  const c = { ...base, ...change };
+  await store.saveCaseVersion({ ...c, causeKind: "event", causeId: "evt_5", changed: changedFields(null, c), why: "gas" }, actions);
   const w = world(replies);
   const lines: Record<string, unknown>[] = [];
   let t = 0;
@@ -151,5 +156,57 @@ describe("outbox sender", () => {
     const api = { getEvents: async () => ({ events: [], next_cursor: 0 }) };
     await tick({ api, store, tracer, handle: async () => {}, afterBatch: async () => { throw new Error("db locked"); } });
     expect(lines.find((l) => l["kind"] === "send.error")).toMatchObject({ error: "db locked" });
+  });
+});
+
+describe("outbox sender: messages (rung 5)", () => {
+  it("202: the message is sent; the actor id is not part of the body", async () => {
+    const s = await setup([], [msg]);
+    expect(await s.sender.drain()).toMatchObject({ sent: 1 });
+    expect(s.calls).toEqual(["MSG tenant_05 Leave now."]);
+    expect(s.lines.find((l) => l["kind"] === "action.sent")).toMatchObject({ to: "tenant_05", body: { subject: "Gas", body: "Leave now." } });
+    expect(await s.statuses()).toEqual(["sent"]);
+  });
+
+  it("a message never waits for a case action: an unknown POST does not hold back the safety text", async () => {
+    const s = await setup([timeout(), accepted], [open, msg]);
+    expect(await s.sender.drain()).toMatchObject({ unknown: 1, sent: 1 });
+    expect(s.calls).toEqual(["POST emergency", "MSG tenant_05 Leave now."]);
+  });
+
+  it("an emergency message that times out is re-sent once, then it is unknown", async () => {
+    const s = await setup([timeout(), timeout()], [msg]);
+    expect(await s.sender.drain()).toMatchObject({ deferred: 1 });
+    expect(await s.sender.drain()).toMatchObject({ unknown: 1 });
+    await s.sender.drain();
+    expect(s.calls).toEqual(["MSG tenant_05 Leave now.", "MSG tenant_05 Leave now."]);
+    expect(await s.store.getCase("case_1")).toMatchObject({ needsReview: true });
+  });
+
+  it("a non-emergency message that times out is unknown at once, and the next message still goes", async () => {
+    const msg2: NewAction = { ...msg, id: "act_m2", body: { to: "tenant_05", body: "Update." } };
+    const s = await setup([new TypeError("fetch failed")], [msg, msg2], { urgency: "medium" });
+    expect(await s.sender.drain()).toMatchObject({ unknown: 1, sent: 1 });
+    expect(await s.statuses()).toEqual(["unknown", "sent"]);
+  });
+
+  it("404 unknown actor: failed, the case needs review", async () => {
+    const s = await setup([status(404)], [msg]);
+    expect(await s.sender.drain()).toMatchObject({ failed: 1 });
+    expect((await s.store.getCase("case_1"))?.needsReview).toBe(true);
+  });
+
+  it("a crash mid-call: an emergency message gets its one re-send; otherwise it is unknown", async () => {
+    const s = await setup([], [msg]);
+    await s.store.markAction("act_m", { status: "sending", attempt: true });
+    await s.sender.drain();
+    expect(s.calls).toEqual(["MSG tenant_05 Leave now."]);
+    expect(s.lines.find((l) => l["kind"] === "action.recovered")).toMatchObject({ to: "pending" });
+
+    const q = await setup([], [msg], { urgency: "high" });
+    await q.store.markAction("act_m", { status: "sending", attempt: true });
+    await q.sender.drain();
+    expect(q.calls).toEqual([]);
+    expect(await q.statuses()).toEqual(["unknown"]);
   });
 });
