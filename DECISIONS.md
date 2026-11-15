@@ -21,6 +21,8 @@ One line for each choice: what, why, and what the other option was. "The agent p
 
 devDependencies: `typescript`, `@types/node`, `vitest`, `openapi-typescript`. Runtime dependencies: `zod`; since 15 Nov the Langfuse SDK and the OpenTelemetry packages it runs on (see Langfuse below).
 
+Dependencies (15 Nov): the AGENTS.md rule "no new dependency; prefer Node built-ins" is removed, at the user's request. A dependency is now chosen like any other tool, on its merits (for example a service's official SDK). The rows above keep the reasons we had at the time.
+
 ## Rung 1: reading events (11 Nov)
 | Choice | Pick | Why | Other option |
 |---|---|---|---|

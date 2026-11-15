@@ -55,7 +55,6 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 
 ## Stack rules
 - Node.js + TypeScript only. `tsc` builds to `dist/`. Tests run with vitest.
-- **No new dependency** without a line in `DECISIONS.md` that says why, and what the built-in option was. Prefer Node built-ins: `fetch`, `node:fs`, `--env-file`.
 - Use the spec types from `src/api/types.ts`. Do not write your own copies of API shapes.
 - LLM calls go through `src/llm.ts` (OpenRouter, plain `fetch`). The model comes from config (`LLM_MODEL`); never hard-code one elsewhere. The provider is pinned (`LLM_PROVIDERS`, default `deepinfra/fp8`) so runs are comparable. Unit tests use a fake `fetch`; only `npm run llm:smoke` and evals call the real API, because they cost money.
 - No `any`. At a trust boundary (an API response, an LLM output) use `unknown` and validate it.
