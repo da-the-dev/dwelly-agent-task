@@ -15,6 +15,7 @@ export type NextStep = (typeof NEXT_STEPS)[number];
 
 /** Dwelly's own Case.status values, so rung 3 can PATCH them as they are. */
 export type CaseStatus = "open" | "in_progress" | "resolved" | "closed";
+export const CASE_STATUSES = ["open", "in_progress", "resolved", "closed"] as const satisfies readonly CaseStatus[];
 /** Who has the next move. */
 export type WaitingOn = "tenant" | "landlord" | "contractor" | "external" | "none";
 /** Set when the case closes. */

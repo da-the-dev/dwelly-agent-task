@@ -44,7 +44,7 @@ describe("eval set", () => {
 
 const run = (item: string, o: Partial<RunResult>): RunResult => ({
   item, run: 0, urgency: "medium", nextStep: "contractor", modelUrgency: "medium", modelNextStep: "contractor",
-  floorOverrode: false, invalid: false, summary: "Tenant reports a leak.", why: "w", ...o,
+  floorOverrode: false, invalid: false, summary: "Tenant reports a leak.", why: "w", status: "open", speak: ["tenant"], ...o,
 });
 const gas: EvalItem = { id: "g", text: "gas", expect: { urgency: ["emergency"], next_step: ["external"] }, why: "" };
 
@@ -74,6 +74,41 @@ describe("scoring", () => {
     expect(r.totals).toMatchObject({ runs: 2, urgencyOk: 1, nextStepOk: 1, bothOk: 1, underRated: 1 });
     expect(r.items[0]?.urgencies).toEqual({ emergency: 1, high: 1 });
   });
+
+  it("status and speak are scored only for items that expect them", () => {
+    expect(score(gas, run("g", { urgency: "emergency", nextStep: "external" }))).toMatchObject({ statusOk: null, speakOk: null });
+    const fixed: EvalItem = { ...gas, expect: { ...gas.expect, status: ["closed", "resolved"], speak: [] } };
+    expect(score(fixed, run("g", { status: "closed", speak: [] }))).toMatchObject({ statusOk: true, speakOk: true });
+    expect(score(fixed, run("g", { status: "open", speak: ["tenant"] }))).toMatchObject({ statusOk: false, speakOk: false });
+    const r = report([gas, fixed], [run("g", { status: "closed", speak: [] })]);
+    expect(r.totals).toMatchObject({ statusRuns: 1, statusOk: 1, speakRuns: 1, speakOk: 1 });
+    expect(r.items.map((x) => x.speakOk)).toEqual([null, 1]);
+    expect(r.items[1]?.speaks).toEqual({ none: 1 });
+  });
+
+  it("speak is an exact set: an extra recipient fails", () => {
+    const landlordOnly: EvalItem = { ...gas, expect: { ...gas.expect, speak: ["landlord"] } };
+    expect(score(landlordOnly, run("g", { speak: ["landlord"] })).speakOk).toBe(true);
+    expect(score(landlordOnly, run("g", { speak: ["landlord", "tenant"] })).speakOk).toBe(false);
+  });
+});
+
+describe("scenario set (15 Nov)", () => {
+  const scenarios = loadEvalSet("scenarios");
+  it("loads, and every thread starts with the tenant who reports it", () => {
+    expect(scenarios.length).toBeGreaterThanOrEqual(10);
+    for (const i of scenarios) if ("thread" in i) expect(i.thread[0]?.role, i.id).toBe("tenant");
+  });
+  it("replays a thread turn by turn: each role has its own actor, a minute apart", () => {
+    const item = scenarios.find((i) => i.id === "landlord-asks");
+    if (!item) throw new Error("no landlord-asks");
+    const ms = itemMessages(item, archive, 1);
+    expect(ms.map((m) => [m.eventId, m.actor.id, m.actor.role])).toEqual([
+      ["landlord-asks#0#r1", "tenant:eval", "tenant"],
+      ["landlord-asks#1#r1", "landlord:eval", "landlord"],
+    ]);
+    expect(Date.parse(ms[1]?.occurredAt ?? "") - Date.parse(ms[0]?.occurredAt ?? "")).toBe(60_000);
+  });
 });
 
 describe("reply claims (rung 5)", () => {
@@ -82,10 +117,14 @@ describe("reply claims (rung 5)", () => {
     expect(replyClaims("We have called the gas emergency line.")).toBe(true);
     expect(replyClaims("An engineer is on the way.")).toBe(true);
     expect(replyClaims("A plumber has been booked.")).toBe(true);
+    // fake-world run, 15 Nov: nobody was on the way
+    expect(replyClaims("Keep others away from the hall until the engineer arrives.")).toBe(true);
+    expect(replyClaims("Stay somewhere safe until they arrive.")).toBe(true);
   });
   it("lets through what we will do, and what the tenant did", () => {
     expect(replyClaims("We will arrange a plumber and confirm a time with you.")).toBe(false);
     expect(replyClaims("Thanks for turning the stopcock off - you have done the right thing.")).toBe(false);
     expect(replyClaims("We have logged this on your home's record.")).toBe(false);
+    expect(replyClaims("We will confirm a time with you. Until then, keep the door open.")).toBe(false);
   });
 });
