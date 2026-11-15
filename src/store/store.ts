@@ -1,6 +1,7 @@
 // The agent's durable state, behind an interface so the SQLite adapter (local dev) can be
 // swapped for a Postgres one (dev/stage/prod) without touching callers. Async on purpose:
 // node:sqlite is synchronous, but every Postgres driver is not.
+import type { Action, ActionUpdate, NewAction } from "../action.js";
 import type { WorldEvent } from "../api/types.js";
 import type { CaseRecord, CaseVersion } from "../case.js";
 
@@ -37,13 +38,30 @@ export interface Store {
   /** The case this cause (e.g. an event id) already produced a version of, if any. */
   caseForCause(causeId: string): Promise<string | null>;
   /**
-   * Append a version and make it the case's latest state, in ONE transaction. If this
-   * cause already produced a version of this case (a redelivered event), nothing changes
-   * and `applied` is false.
+   * Append a version, make it the case's latest state, and queue the outbox actions it
+   * caused, in ONE transaction. If this cause already produced a version of this case (a
+   * redelivered event), nothing changes, no action is queued, and `applied` is false.
+   * Each action's `eventId` is the version's `causeId`.
    */
-  saveCaseVersion(v: CaseVersion): Promise<{ applied: boolean }>;
+  saveCaseVersion(v: CaseVersion, actions?: NewAction[]): Promise<{ applied: boolean }>;
   /** Every version of a case, oldest first. */
   caseHistory(caseId: string): Promise<CaseVersion[]>;
+
+  /** Actions waiting to be sent, oldest first; within a case, in queue order. */
+  pendingActions(limit: number): Promise<Action[]>;
+  /** Every action of a case, in queue order. */
+  actionsForCase(caseId: string): Promise<Action[]>;
+  /**
+   * Update an action. With `version`, the case version is written in the same transaction
+   * (e.g. the Dwelly id from a 201), so the two cannot disagree after a crash.
+   */
+  markAction(id: string, update: ActionUpdate, version?: CaseVersion): Promise<void>;
+  /**
+   * After a crash mid-call: a `sending` case_open becomes `unknown` (it may have created a
+   * case), a `sending` case_patch goes back to `pending` (PATCH is idempotent). Returns
+   * the actions as they were before the change.
+   */
+  recoverSending(): Promise<Action[]>;
 
   close(): Promise<void>;
 }

@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
+import type { Action, ActionUpdate, NewAction } from "../action.js";
 import type { WorldEvent } from "../api/types.js";
 import type { CaseRecord, CaseVersion } from "../case.js";
 import type { Actor, InboxStatus, Store } from "./store.js";
@@ -57,6 +58,26 @@ function toVersion(r: Row): CaseVersion {
   };
 }
 
+function toAction(r: Row): Action {
+  const s = (k: string) => (r[k] == null ? null : String(r[k]));
+  // We wrote `body` ourselves from a typed request, so kind tells us its type.
+  const request = { kind: String(r["kind"]), body: JSON.parse(String(r["body"])) } as Action;
+  return {
+    ...request,
+    id: String(r["id"]),
+    caseId: String(r["case_id"]),
+    caseVersion: Number(r["case_version"]),
+    seq: Number(r["seq"]),
+    eventId: String(r["event_id"]),
+    status: String(r["status"]) as Action["status"],
+    attempts: Number(r["attempts"]),
+    resultId: s("result_id"),
+    error: s("error"),
+    createdAt: String(r["created_at"]),
+    sentAt: s("sent_at"),
+  };
+}
+
 /** path ":memory:" for tests. */
 export function openSqliteStore(path: string): Store {
   if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
@@ -99,6 +120,44 @@ export function openSqliteStore(path: string): Store {
   const history = db.prepare("SELECT * FROM case_versions WHERE case_id = ? ORDER BY version");
   const byDwellyId = db.prepare("SELECT * FROM cases WHERE dwelly_case_id = ?");
   const byCause = db.prepare("SELECT case_id FROM case_versions WHERE cause_id = ? LIMIT 1");
+
+  const insertAction = db.prepare(
+    `INSERT INTO actions (id, case_id, case_version, seq, event_id, kind, body, status, attempts, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)`,
+  );
+  const ACTION_ORDER = "ORDER BY created_at, case_id, case_version, seq";
+  const pendingActions = db.prepare(`SELECT * FROM actions WHERE status = 'pending' ${ACTION_ORDER} LIMIT ?`);
+  const caseActions = db.prepare(`SELECT * FROM actions WHERE case_id = ? ORDER BY case_version, seq`);
+  const getAction = db.prepare("SELECT id FROM actions WHERE id = ?");
+  const updateAction = db.prepare(
+    `UPDATE actions SET status = ?, error = COALESCE(?, error), result_id = COALESCE(?, result_id),
+       sent_at = COALESCE(?, sent_at), attempts = attempts + ? WHERE id = ?`,
+  );
+  const sending = db.prepare(`SELECT * FROM actions WHERE status = 'sending' ${ACTION_ORDER}`);
+  const recover = db.prepare(
+    `UPDATE actions SET status = CASE kind WHEN 'case_open' THEN 'unknown' ELSE 'pending' END,
+       error = 'interrupted mid-call (process stopped)' WHERE status = 'sending'`,
+  );
+
+  /** Insert a version and update the case; no transaction of its own. */
+  function writeVersion(v: CaseVersion): boolean {
+    const applied =
+      Number(insertVersion.run(v.id, v.version, v.causeKind, v.causeId, v.changed.join(","), v.why, ...caseValues(v)).changes) === 1;
+    if (applied) upsertCase.run(v.id, v.version, ...caseValues(v));
+    return applied;
+  }
+
+  function inTransaction<T>(fn: () => T): T {
+    db.exec("BEGIN");
+    try {
+      const r = fn();
+      db.exec("COMMIT");
+      return r;
+    } catch (err) {
+      db.exec("ROLLBACK");
+      throw err;
+    }
+  }
 
   return {
     async getCursor() {
@@ -153,21 +212,40 @@ export function openSqliteStore(path: string): Store {
       const r = byCause.get(causeId) as Row | undefined;
       return r ? String(r["case_id"]) : null;
     },
-    async saveCaseVersion(v: CaseVersion) {
-      db.exec("BEGIN");
-      try {
-        const applied =
-          Number(insertVersion.run(v.id, v.version, v.causeKind, v.causeId, v.changed.join(","), v.why, ...caseValues(v)).changes) === 1;
-        if (applied) upsertCase.run(v.id, v.version, ...caseValues(v));
-        db.exec("COMMIT");
+    async saveCaseVersion(v: CaseVersion, actions: NewAction[] = []) {
+      return inTransaction(() => {
+        const applied = writeVersion(v);
+        if (applied) {
+          actions.forEach((a, seq) =>
+            insertAction.run(a.id, v.id, v.version, seq, v.causeId, a.kind, JSON.stringify(a.body), v.updatedAt),
+          );
+        }
         return { applied };
-      } catch (err) {
-        db.exec("ROLLBACK");
-        throw err;
-      }
+      });
     },
     async caseHistory(caseId: string) {
       return (history.all(caseId) as Row[]).map(toVersion);
+    },
+
+    async pendingActions(limit: number) {
+      return (pendingActions.all(limit) as Row[]).map(toAction);
+    },
+    async actionsForCase(caseId: string) {
+      return (caseActions.all(caseId) as Row[]).map(toAction);
+    },
+    async markAction(id: string, u: ActionUpdate, version?: CaseVersion) {
+      inTransaction(() => {
+        if (!getAction.get(id)) throw new Error(`no action ${id}`);
+        updateAction.run(u.status, u.error ?? null, u.resultId ?? null, u.sentAt ?? null, u.attempt ? 1 : 0, id);
+        if (version && !writeVersion(version)) throw new Error(`version for ${id} was already written`);
+      });
+    },
+    async recoverSending() {
+      return inTransaction(() => {
+        const before = (sending.all() as Row[]).map(toAction);
+        recover.run();
+        return before;
+      });
     },
 
     async close() {

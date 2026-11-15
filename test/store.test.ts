@@ -88,3 +88,52 @@ describe("actors", () => {
     expect(await store.getActor("tenant_02")).toEqual({ id: "tenant_02", role: "tenant", name: "Hannah Osei", propertyId: "prop_02" });
   });
 });
+
+describe("outbox actions (rung 3)", () => {
+  const open = { id: "act_1", kind: "case_open" as const, body: { title: "Leak", urgency: "medium" as const } };
+  const close = { id: "act_2", kind: "case_patch" as const, body: { status: "closed" as const } };
+
+  it("actions are queued with their version, in order, pending", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v(base, "evt_3", null), [open, close]);
+    const queued = await store.pendingActions(10);
+    expect(queued.map((a) => [a.id, a.kind, a.status, a.caseId, a.caseVersion, a.seq, a.eventId])).toEqual([
+      ["act_1", "case_open", "pending", "case_1", 1, 0, "evt_3"],
+      ["act_2", "case_patch", "pending", "case_1", 1, 1, "evt_3"],
+    ]);
+    expect(queued[0]?.body).toEqual({ title: "Leak", urgency: "medium" });
+  });
+
+  it("a redelivered event queues no second action (no second POST /cases)", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v(base, "evt_3", null), [open]);
+    await store.saveCaseVersion(v(base, "evt_3", null), [{ ...open, id: "act_9" }]);
+    expect((await store.actionsForCase("case_1")).map((a) => a.id)).toEqual(["act_1"]);
+  });
+
+  it("marking an action sent writes the case version in the same transaction", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v(base, "evt_3", null), [open]);
+    const withId = { ...base, dwellyCaseId: "d-1", version: 2 };
+    await store.markAction("act_1", { status: "sent", resultId: "d-1", sentAt: "t" }, { ...v(withId, "act_1", base), causeKind: "action" });
+    expect(await store.findCaseByDwellyId("d-1")).toMatchObject({ id: "case_1", version: 2 });
+    expect((await store.actionsForCase("case_1"))[0]).toMatchObject({ status: "sent", resultId: "d-1" });
+  });
+
+  it("a version that cannot be written leaves the action as it was", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v(base, "evt_3", null), [open]);
+    // version 1 already exists: the write fails, and the status change rolls back with it
+    await expect(store.markAction("act_1", { status: "sent" }, v({ ...base, urgency: "high" }, "act_1", base))).rejects.toThrow();
+    expect((await store.actionsForCase("case_1"))[0]?.status).toBe("pending");
+  });
+
+  it("after a crash mid-call: a POST becomes unknown, a PATCH goes back to pending", async () => {
+    const store = openSqliteStore(":memory:");
+    await store.saveCaseVersion(v(base, "evt_3", null), [open, close]);
+    await store.markAction("act_1", { status: "sending", attempt: true });
+    await store.markAction("act_2", { status: "sending", attempt: true });
+    expect((await store.recoverSending()).map((a) => a.id)).toEqual(["act_1", "act_2"]);
+    expect((await store.actionsForCase("case_1")).map((a) => [a.status, a.attempts])).toEqual([["unknown", 1], ["pending", 1]]);
+  });
+});

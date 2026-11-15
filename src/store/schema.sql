@@ -82,3 +82,25 @@ CREATE TABLE IF NOT EXISTS case_versions (
   PRIMARY KEY (case_id, version),
   UNIQUE (case_id, cause_id)
 );
+
+-- Outbox (rung 3): world-changing calls we decided to make, written in the SAME transaction
+-- as the case version that caused them, before any HTTP call. POST /cases is not idempotent,
+-- so a row left in 'sending' after a crash means "outcome unknown", not "send again".
+-- Order within a case: (case_version, seq). The Dwelly id of a case lives on the case.
+CREATE TABLE IF NOT EXISTS actions (
+  id            TEXT    PRIMARY KEY,   -- act_<uuid>; the cause_id of the version a 201 writes
+  case_id       TEXT    NOT NULL,      -- cases.id
+  case_version  INTEGER NOT NULL,      -- the version that queued it
+  seq           INTEGER NOT NULL,      -- position among that version's actions
+  event_id      TEXT    NOT NULL,      -- inbox.id that caused it
+  kind          TEXT    NOT NULL,      -- case_open | case_patch
+  body          TEXT    NOT NULL,      -- JSON request body (CaseCreate / CasePatch)
+  status        TEXT    NOT NULL,      -- pending | sending | sent | unknown | failed
+  attempts      INTEGER NOT NULL,
+  result_id     TEXT,                  -- Dwelly case id from a 201
+  error         TEXT,
+  created_at    TEXT    NOT NULL,
+  sent_at       TEXT
+);
+CREATE INDEX IF NOT EXISTS actions_status ON actions (status, created_at);
+CREATE INDEX IF NOT EXISTS actions_case ON actions (case_id, case_version, seq);
