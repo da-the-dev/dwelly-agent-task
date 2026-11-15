@@ -86,3 +86,10 @@ The user's choice: a trace viewer for themselves, and a prompt store that is eas
 - **Unknown POSTs**: today a person must look. Next step: match the world's `case.created` echo by the `ref:` in the description; with no echo after N s, retry once for high/emergency (a duplicate costs less than no case for gas).
 - **Echo event names**: `case.created` / `case.updated` are the fake world's guesses, not the spec's.
 - **Left out on purpose**: (fill in as we go)
+
+## Later: from the outside review (15 Nov), to circle back to
+Parked by the user on 15 Nov. None of these blocks rungs 4 and 5.
+- **Thread eval items** (review S3): an eval item today is one tenant text or an archive thread (`src/eval/set.ts`). Add a `thread` item, `[{role, text}]`, scored on the last step, so a live multi-turn failure can become an eval item. First example: the tenant says "fixed it myself" after the case opens.
+- **`/regress` command** (review C1): a `.claude/commands/` command that takes an `event_id` from a trace, writes it as an eval item, shows it fail, then the fix and a pass. It shows the harness, and it makes the live "turn a failure into a check" step faster.
+- **Fake world answers** (review C2): one answer for each message we send. This is step 4 of the rung 5 plan in the diagram, so it may come back with rung 5.
+- **Say it before they ask**: the evals measure fit, not generalisation. Only the 6 tone flips are held out (see "Model for the live session" above).
