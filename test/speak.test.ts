@@ -47,6 +47,18 @@ describe("speakFor", () => {
     expect(speakFor(c, v2({ urgency: "low" }), tenant("Thanks, will do."), null)).toEqual([]);
   });
 
+  it("an open emergency: every update from the reporter gets an answer, even with no change and no '?' (gas-update)", () => {
+    const em = v2({ urgency: "emergency", status: "in_progress", waitingOn: "external", nextStep: "external", openQuestions: [] });
+    const prev = { ...em, version: 1 };
+    expect(reasons(speakFor(prev, em, tenant("I'm outside on the pavement now."), null))).toEqual([["tenant_02", "open_emergency"]]);
+    // closed, or not the reporter: no
+    const closed = { ...em, status: "closed" as const, waitingOn: "none" as const };
+    expect(speakFor({ ...closed, version: 1 }, closed, tenant("Thanks."), null)).toEqual([]);
+    expect(speakFor(prev, em, from("landlord_02", "landlord", "Noted."), null)).toEqual([]);
+    // another reason already applies: no extra reason
+    expect(reasons(speakFor(prev, em, tenant("Should I call them again?"), null))).toEqual([["tenant_02", "asked"]]);
+  });
+
   it("a question from the reporter is answered even when nothing else changed", () => {
     expect(reasons(speakFor(c, v2({}), tenant("When will someone come?"), null))).toEqual([["tenant_02", "asked"]]);
   });

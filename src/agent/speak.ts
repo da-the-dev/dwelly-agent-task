@@ -6,7 +6,8 @@
 // changes nothing gets no message back (no ping-pong).
 //
 //   to the reporter (tenant)   new case | urgency went up | new open questions |
-//                              status or waiting_on changed | case closed | they asked us
+//                              status or waiting_on changed | case closed | they asked us |
+//                              any message of theirs while the case is an open emergency
 //   to anyone else who asked   a landlord or another tenant whose message has a "?"
 //   never                      a contractor (rung 4 talks to them through work orders);
 //                              a landlord only to announce the case (POST /cases told them)
@@ -14,7 +15,8 @@ import type { CaseRecord, CaseStatus, NextStep, Urgency, WaitingOn } from "../ca
 import { urgencyRank } from "../case.js";
 import type { IncomingMessage } from "./message.js";
 
-export type SpeakReason = "new_case" | "urgency_up" | "new_questions" | "status_changed" | "waiting_changed" | "closed" | "asked";
+export type SpeakReason =
+  | "new_case" | "urgency_up" | "new_questions" | "status_changed" | "waiting_changed" | "closed" | "asked" | "open_emergency";
 
 export interface Recipient {
   to: string;
@@ -49,6 +51,9 @@ export function speakFor(
       else if (next.waitingOn !== prev.waitingOn && !isClosed(next)) r.push("waiting_changed");
     }
     if (asked && message.actor.id === next.reporter) r.push("asked");
+    // In an open emergency the tenant is never left without an answer (user, 15 Nov; the
+    // gas-update scenario). The loop guard still limits a long exchange.
+    if (!r.length && message.actor.id === next.reporter && next.urgency === "emergency" && !isClosed(next)) r.push("open_emergency");
     if (r.length) out.push({ to: next.reporter, role: "tenant", name: reporterName, reasons: r });
   }
   if (asked && message.actor.id !== next.reporter) {
