@@ -120,11 +120,16 @@ describe("reply claims (rung 5)", () => {
     // fake-world run, 15 Nov: nobody was on the way
     expect(replyClaims("Keep others away from the hall until the engineer arrives.")).toBe(true);
     expect(replyClaims("Stay somewhere safe until they arrive.")).toBe(true);
+    // experiment 003, locked-out run 0: nobody is checking
+    expect(replyClaims("We're checking whether your landlord holds a spare.")).toBe(true);
+    expect(replyClaims("We are currently contacting the landlord about it.")).toBe(true);
   });
   it("lets through what we will do, and what the tenant did", () => {
     expect(replyClaims("We will arrange a plumber and confirm a time with you.")).toBe(false);
     expect(replyClaims("Thanks for turning the stopcock off - you have done the right thing.")).toBe(false);
     expect(replyClaims("We have logged this on your home's record.")).toBe(false);
     expect(replyClaims("We will confirm a time with you. Until then, keep the door open.")).toBe(false);
+    expect(replyClaims("We will check whether your landlord holds a spare and come back to you.")).toBe(false);
+    expect(replyClaims("We're treating this as urgent.")).toBe(false);
   });
 });

@@ -58,7 +58,7 @@ describe("writeReply", () => {
       source: "model",
       error: null,
     });
-    expect(t.lines.find((l) => l["kind"] === "llm.call")).toMatchObject({ event_id: "evt_7", prompt: expect.stringMatching(/^reply\.v1@/) });
+    expect(t.lines.find((l) => l["kind"] === "llm.call")).toMatchObject({ event_id: "evt_7", prompt: expect.stringMatching(new RegExp(`^${REPLY_PROMPT.replace(".", "\\.")}@`)) });
   });
 
   it("an answer still invalid after the retry: the template goes, with the safety line and the advice", async () => {

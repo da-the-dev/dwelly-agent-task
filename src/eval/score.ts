@@ -58,8 +58,10 @@ export function summaryClaims(summary: string): boolean {
 // A message (rung 5) must not claim what only the world can confirm: before rung 4 nobody is
 // booked, called or on the way. "We will arrange" is fine; "we've booked" is not.
 // "Until the engineer arrives" (fake-world run, 15 Nov) promises that someone is coming.
+// "We're checking whether your landlord holds a spare" (experiment 003): an action in progress
+// that nothing in the case records (criteria v1, T5).
 const REPLY_CLAIM =
-  /\b(we|i)('ve|\s+have|\s+has)?\s+(already\s+)?(called|phoned|rung|contacted|booked|arranged|dispatched|sent (an?|the|someone)|notified|informed|spoken to|reported)\b|\b(is|are) on (their|his|her|its|the) way\b|\b(has|have) been (dispatched|booked|called|arranged)\b|\buntil (the|an?|they|someone|help)\b[^.!?\n]{0,40}?\barrives?\b/i;
+  /\b(we|i)('re|'m|\s+are|\s+am)\s+(now\s+|currently\s+|already\s+)?(checking|asking|contacting|chasing|speaking (to|with)|getting in touch|liaising|looking into|finding out)\b|\b(we|i)('ve|\s+have|\s+has)?\s+(already\s+)?(called|phoned|rung|contacted|booked|arranged|dispatched|sent (an?|the|someone)|notified|informed|spoken to|reported)\b|\b(is|are) on (their|his|her|its|the) way\b|\b(has|have) been (dispatched|booked|called|arranged)\b|\buntil (the|an?|they|someone|help)\b[^.!?\n]{0,40}?\barrives?\b/i;
 
 export function replyClaims(body: string): boolean {
   return REPLY_CLAIM.test(body);
