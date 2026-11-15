@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_MODEL, DEFAULT_PROVIDERS, FAKE_TOKEN, loadConfig, maskToken } from "../src/config.js";
+import { DEFAULT_EMERGENCY_NUMBER, DEFAULT_MODEL, DEFAULT_PROVIDERS, FAKE_TOKEN, loadConfig, maskToken } from "../src/config.js";
 
 describe("loadConfig", () => {
   it("rejects a missing base URL", () => {
@@ -20,6 +20,7 @@ describe("loadConfig", () => {
       stateDb: "state/agent.db",
       pollIntervalMs: 2000,
       openCaseOutOfScope: true,
+      emergencyNumber: "999",
       llm: { apiKey: null, model: DEFAULT_MODEL, providers: DEFAULT_PROVIDERS },
       langfuse: null,
     });
@@ -31,6 +32,11 @@ describe("loadConfig", () => {
       baseUrl: "https://cloud.langfuse.com", publicKey: "pk", secretKey: "sk", traces: true,
     });
     expect(lf({ LANGFUSE_PUBLIC_KEY: "pk", LANGFUSE_SECRET_KEY: "sk", LANGFUSE_TRACES: "off" })?.traces).toBe(false);
+  });
+  it("EMERGENCY_NUMBER: 999 by default; anything that is not a phone number is refused", () => {
+    const num = (v?: string) => loadConfig({ DWELLY_BASE_URL: "https://x", EMERGENCY_NUMBER: v }).emergencyNumber;
+    expect([num(), num("112"), num(" +44 999 ")]).toEqual([DEFAULT_EMERGENCY_NUMBER, "112", "+44 999"]);
+    expect(() => num("call the police")).toThrow(/EMERGENCY_NUMBER/);
   });
   it("OPEN_CASE_OUT_OF_SCOPE=false turns opening out-of-scope cases off", () => {
     const flag = (v: string) => loadConfig({ DWELLY_BASE_URL: "https://x", OPEN_CASE_OUT_OF_SCOPE: v }).openCaseOutOfScope;

@@ -6,6 +6,8 @@ export const DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash-1017";
  * different quantizations. Override with LLM_PROVIDERS (comma-separated; "any" = unpinned).
  */
 export const DEFAULT_PROVIDERS = ["deepinfra/fp8"];
+/** The UK general emergency number (police, fire, ambulance). The world is in the UK. */
+export const DEFAULT_EMERGENCY_NUMBER = "999";
 /** The token the local fake world accepts (.env.fake). Never valid on a real server. */
 export const FAKE_TOKEN = "fake-token";
 const LOCAL_HTTP = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/;
@@ -22,6 +24,11 @@ export interface Config {
    * landlord; the archive records these cases anyway (case-11), so the default is true.
    */
   openCaseOutOfScope: boolean;
+  /**
+   * The number the safety line in an emergency message gives (rung 5). Code writes it, never
+   * the model. One number for gas, fire, an intruder or an injury.
+   */
+  emergencyNumber: string;
   llm: {
     /** OpenRouter key; null means LLM calls are unavailable. */
     apiKey: string | null;
@@ -71,6 +78,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     stateDb: env["STATE_DB"]?.trim() || "state/agent.db",
     pollIntervalMs: Number(env["POLL_INTERVAL_MS"] ?? 2000),
     openCaseOutOfScope: !/^(false|0|no)$/i.test(env["OPEN_CASE_OUT_OF_SCOPE"]?.trim() ?? ""),
+    emergencyNumber: loadEmergencyNumber(env["EMERGENCY_NUMBER"]),
     llm: {
       apiKey: env["OPENROUTER_API_KEY"]?.trim() || null,
       model: env["LLM_MODEL"]?.trim() || DEFAULT_MODEL,
@@ -90,6 +98,14 @@ function loadLangfuse(env: NodeJS.ProcessEnv): LangfuseConfig | null {
     secretKey,
     traces: !/^(off|false|0|no)$/i.test(env["LANGFUSE_TRACES"]?.trim() ?? ""),
   };
+}
+
+function loadEmergencyNumber(raw: string | undefined): string {
+  const v = raw?.trim();
+  if (!v) return DEFAULT_EMERGENCY_NUMBER;
+  // It goes into safety messages: refuse anything that is not a phone number.
+  if (!/^\+?[0-9][0-9 ]{1,15}$/.test(v)) throw new Error(`EMERGENCY_NUMBER must be a phone number (got ${v}).`);
+  return v;
 }
 
 function parseProviders(raw: string | undefined): string[] {
