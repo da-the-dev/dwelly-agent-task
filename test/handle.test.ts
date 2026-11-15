@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { WorldEvent } from "../src/api/types.js";
 import { CLASSIFY_PROMPT, loadPrompt } from "../src/agent/classify.js";
 import { createHandler } from "../src/agent/handle.js";
+import { REPLY_PROMPT } from "../src/agent/reply.js";
 import { openSqliteStore } from "../src/store/sqlite.js";
 import { createTracer } from "../src/trace.js";
 
@@ -29,10 +30,15 @@ const answer = (o: Record<string, unknown>) =>
     ...o,
   });
 
-function setup(answers: string[], openCaseOutOfScope = true) {
+/** A fake OpenRouter: classify calls get `answers` in order, writer calls get `replies`. */
+function setup(answers: string[], openCaseOutOfScope = true, replies: string[] = []) {
   let calls = 0;
-  const fetchImpl = (async () => {
-    const content = answers[calls++] ?? "";
+  let writes = 0;
+  const fetchImpl = (async (_url: string, init: RequestInit) => {
+    const system = (JSON.parse(String(init.body)) as { messages: { content: string }[] }).messages[0]?.content ?? "";
+    const content = system.startsWith("You write one message")
+      ? (replies[writes++] ?? JSON.stringify({ body: `Reply ${writes}.` }))
+      : (answers[calls++] ?? "");
     return new Response(
       JSON.stringify({ id: "g", model: "m", provider: "P", choices: [{ message: { content }, finish_reason: "stop" }], usage: {} }),
       { status: 200 },
@@ -45,18 +51,20 @@ function setup(answers: string[], openCaseOutOfScope = true) {
     store,
     tracer,
     classify: { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(CLASSIFY_PROMPT), tracer, fetchImpl },
+    writer: { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(REPLY_PROMPT), tracer, fetchImpl, emergencyNumber: "999" },
     openCaseOutOfScope,
     now: () => "2026-11-11T17:05:00.000Z",
   });
   const kinds = () => lines.map((l) => l["kind"]).filter((k) => k !== "llm.call");
   const line = (kind: string) => lines.find((l) => l["kind"] === kind);
-  return { store, handle, lines, kinds, line, calls: () => calls };
+  const queued = (kind: string) => lines.filter((l) => l["kind"] === "action.queued" && l["action"] === kind);
+  return { store, handle, lines, kinds, line, queued, calls: () => calls, writes: () => writes };
 }
 
 const gas = "There's a strong smell of gas in the entrance hall.";
 
 describe("message handler (rungs 2-3)", () => {
-  it("a new problem becomes version 1 of a new case, with its Dwelly calls queued and rung 5 traced", async () => {
+  it("a new problem becomes version 1 of a new case, with its message and its Dwelly calls queued", async () => {
     const t = setup([answer({ urgency: "emergency", next_step: "external", safety_advice: "Leave the building." })]);
     await t.handle(message("evt_1", gas));
 
@@ -64,14 +72,22 @@ describe("message handler (rungs 2-3)", () => {
     expect(await t.store.getCase(caseId)).toMatchObject({
       version: 1, urgency: "emergency", nextStep: "external", status: "in_progress", waitingOn: "external", propertyId: "prop_09", reporter: "tenant_09",
     });
-    expect(t.kinds()).toEqual(["case.version", "action.queued", "action.queued", "intent.message_tenant"]);
-    // gas is external (in_progress), and a Dwelly case is created open: POST, then PATCH
+    expect(t.kinds()).toEqual(["case.version", "action.queued", "action.queued", "action.queued"]);
+    // the message first (safety must not wait for POST /cases); gas is external
+    // (in_progress), and a Dwelly case is created open: POST, then PATCH
     const queued = await t.store.actionsForCase(caseId);
-    expect(queued.map((a) => [a.kind, a.status, a.eventId])).toEqual([["case_open", "pending", "evt_1"], ["case_patch", "pending", "evt_1"]]);
-    expect(queued[0]?.body).toMatchObject({ urgency: "emergency", property_id: "prop_09" });
-    expect(queued[1]?.body).toEqual({ status: "in_progress" });
+    expect(queued.map((a) => [a.kind, a.status, a.eventId])).toEqual([
+      ["msg_send", "pending", "evt_1"], ["case_open", "pending", "evt_1"], ["case_patch", "pending", "evt_1"],
+    ]);
+    expect(queued[0]?.body).toEqual({
+      to: "tenant_09",
+      subject: "Re: t",
+      body: "If anyone is in danger, get to a safe place and call 999 now.\n\nReply 1.",
+    });
+    expect(queued[1]?.body).toMatchObject({ urgency: "emergency", property_id: "prop_09" });
+    expect(queued[2]?.body).toEqual({ status: "in_progress" });
     expect(t.line("case.version")).toMatchObject({ event_id: "evt_1", linked_by: "new", applied: true });
-    expect(t.line("intent.message_tenant")).toMatchObject({ to: "tenant_09", safety_advice: "Leave the building." });
+    expect(t.queued("msg_send")[0]).toMatchObject({ to: "tenant_09", reasons: ["new_case"], source: "model" });
   });
 
   it("a later message at the same property is the next version of the open case", async () => {
@@ -83,7 +99,7 @@ describe("message handler (rungs 2-3)", () => {
     const history = await t.store.caseHistory(caseId);
     expect(history.map((h) => [h.version, h.causeId, h.urgency])).toEqual([[1, "evt_1", "medium"], [2, "evt_2", "high"]]);
     expect(history[1]?.changed).toContain("urgency");
-    expect((await t.store.actionsForCase(caseId)).map((a) => [a.kind, a.body, a.caseVersion])).toEqual([
+    expect((await t.store.actionsForCase(caseId)).filter((a) => a.kind !== "msg_send").map((a) => [a.kind, a.body, a.caseVersion])).toEqual([
       ["case_open", expect.objectContaining({ urgency: "medium" }), 1],
       ["case_patch", { urgency: "high" }, 2],
     ]);
@@ -105,7 +121,7 @@ describe("message handler (rungs 2-3)", () => {
     await t.handle(message("evt_1", "the neighbours upstairs are stomping at 2am"));
     expect(t.calls()).toBe(1);
     expect(t.lines.filter((l) => l["kind"] === "case.version")).toHaveLength(1);
-    expect(await t.store.pendingActions(10)).toHaveLength(2); // POST + PATCH closed, queued once
+    expect((await t.store.pendingActions(10)).map((a) => a.kind)).toEqual(["msg_send", "case_open", "case_patch"]); // queued once
   });
 
   it("ignores events that are not messages, without calling the LLM", async () => {
@@ -125,7 +141,8 @@ describe("message handler (rungs 2-3)", () => {
     const t = setup([answer({ urgency: "low", next_step: "out_of_scope" })], false);
     await t.handle(message("evt_1", "the neighbours upstairs are stomping at 2am"));
     expect(t.line("action.skipped")).toMatchObject({ action: "case_open", reason: "OPEN_CASE_OUT_OF_SCOPE=false" });
-    expect(await t.store.pendingActions(10)).toEqual([]);
+    // no Dwelly case, but the tenant still gets an honest answer
+    expect((await t.store.pendingActions(10)).map((a) => a.kind)).toEqual(["msg_send"]);
   });
 
   it("a message without a property in the payload uses the property we know for the sender", async () => {
@@ -153,8 +170,8 @@ describe("role guard: only a tenant's report moves the case", () => {
       version: 2, urgency: "high", nextStep: "contractor", status: "open", waitingOn: "contractor", summary: "landlord approved the spend",
     });
     expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => l["role_guard"])).toEqual([false, true]);
-    // nothing changed that Dwelly holds: no PATCH
-    expect((await t.store.actionsForCase(caseId)).map((a) => a.kind)).toEqual(["case_open"]);
+    // nothing changed that Dwelly holds: no PATCH; "Approved." asks nothing: no message
+    expect((await t.store.actionsForCase(caseId)).map((a) => a.kind)).toEqual(["msg_send", "case_open"]);
   });
 
   it("a landlord's message can still raise the urgency", async () => {
@@ -172,5 +189,42 @@ describe("role guard: only a tenant's report moves the case", () => {
     expect(t.kinds()).toEqual(["message.unlinked"]);
     expect(t.line("message.unlinked")).toMatchObject({ event_id: "evt_1", from: "c_A", role: "contractor" });
     expect(await t.store.pendingActions(10)).toEqual([]);
+  });
+});
+
+describe("rung 5: messages from the handler", () => {
+  it("a tenant's 'thanks' that changes nothing gets no message; a question does", async () => {
+    const t = setup([answer({}), answer({}), answer({})]);
+    await t.handle(message("evt_1", "tiny leak under the sink"));
+    await t.handle(message("evt_2", "Thanks, will do."));
+    await t.handle(message("evt_3", "When will the plumber come?"));
+    expect(t.queued("msg_send").map((l) => [l["event_id"], l["reasons"]])).toEqual([["evt_1", ["new_case"]], ["evt_3", ["asked"]]]);
+    expect(t.writes()).toBe(2);
+  });
+
+  it("a landlord's question gets an answer, without the tenant's safety line", async () => {
+    const t = setup([answer({ urgency: "emergency", next_step: "external" }), answer({ urgency: "emergency", next_step: "external" })]);
+    await t.handle(message("evt_1", gas));
+    await t.handle(message("evt_2", "Has the gas board been called?", "landlord_09", "prop_09", "landlord"));
+    const second = t.queued("msg_send")[1];
+    expect(second).toMatchObject({ event_id: "evt_2", to: "landlord_09", reasons: ["asked"], body: { body: "Reply 2." } });
+  });
+
+  it("the loop guard stops a sixth message in a row while the case does not move", async () => {
+    const asks = (i: number) => answer({ next_step: "need_info", open_questions: [`question ${i}?`] });
+    const t = setup([1, 2, 3, 4, 5, 6].map(asks));
+    for (const i of [1, 2, 3, 4, 5, 6]) await t.handle(message(`evt_${i}`, `answer ${i}`));
+    expect(t.queued("msg_send")).toHaveLength(5);
+    expect(t.line("speak.loop_guard")).toMatchObject({ event_id: "evt_6", to: "tenant_09" });
+    const caseId = String(t.line("case.version")?.["case_id"]);
+    expect((await t.store.getCase(caseId))?.needsReview).toBe(true);
+  });
+
+  it("a redelivered event writes no second message", async () => {
+    const t = setup([answer({})]);
+    await t.handle(message("evt_1", gas));
+    await t.handle(message("evt_1", gas));
+    expect(t.writes()).toBe(1);
+    expect((await t.store.pendingActions(10)).map((a) => a.kind)).toEqual(["msg_send", "case_open", "case_patch"]);
   });
 });

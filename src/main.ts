@@ -1,9 +1,11 @@
 // The agent service. Rung 1: poll the world's events into the inbox. Rung 2: classify each
 // message into a version of our own case. Rung 3: queue and send POST / PATCH /cases from
-// an outbox after each batch. What rung 5 would say is traced only.
+// an outbox after each batch. Rung 5: messages to the tenant (and a landlord who asks), written
+// by a second LLM call and sent through the same outbox.
 import { createApi } from "./api/client.js";
 import { CLASSIFY_PROMPT, loadPrompt } from "./agent/classify.js";
 import { createHandler } from "./agent/handle.js";
+import { REPLY_PROMPT } from "./agent/reply.js";
 import { runLoop } from "./agent/loop.js";
 import { createSender } from "./agent/sender.js";
 import { loadConfig, maskToken, type Config } from "./config.js";
@@ -28,6 +30,7 @@ if (!config.llm.apiKey) {
 }
 const llm = { apiKey: config.llm.apiKey, model: config.llm.model, providers: config.llm.providers };
 const prompt = loadPrompt(CLASSIFY_PROMPT);
+const replyPrompt = loadPrompt(REPLY_PROMPT);
 
 const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const tracePath = `traces/${runId}.jsonl`;
@@ -54,6 +57,8 @@ tracer.trace("run.start", {
   model: config.llm.model,
   providers: config.llm.providers,
   prompt: prompt.version,
+  reply_prompt: replyPrompt.version,
+  emergency_number: config.emergencyNumber,
   open_case_out_of_scope: config.openCaseOutOfScope,
   langfuse: langfuse ? config.langfuse?.baseUrl : "off",
 });
@@ -70,6 +75,7 @@ await runLoop({
     store,
     tracer,
     classify: { llm, prompt, tracer },
+    writer: { llm, prompt: replyPrompt, tracer, emergencyNumber: config.emergencyNumber },
     openCaseOutOfScope: config.openCaseOutOfScope,
   }),
 });

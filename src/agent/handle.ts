@@ -1,11 +1,14 @@
 // The event handler the loop calls for each inbox event. For a message: find its case,
-// decide (classify -> safety floor -> state), and save the next case version together with
-// the outbox actions it needs (rung 3: POST / PATCH /cases). The handler makes no world
-// call itself; the sender does, after the batch. What rung 5 would say is traced only.
+// decide (classify -> safety floor -> state), write the messages the new version calls for
+// (rung 5), and save the version together with its outbox actions: the messages first,
+// then the POST / PATCH /cases calls (rung 3). The handler makes no world call itself; the
+// sender does, after the batch.
 //
 // Delivery is at-least-once, so the handler is idempotent: an event that already produced
-// a case version is skipped BEFORE the LLM call (no cost, and no duplicate case even if
-// the first one has closed since), and a version saved twice queues its actions once.
+// a case version is skipped BEFORE any LLM call (no cost, and no duplicate case or message
+// even if the first case has closed since), and a version saved twice queues its actions once.
+import { randomUUID } from "node:crypto";
+import type { NewAction } from "../action.js";
 import { changedFields, type CaseRecord, type CaseVersion } from "../case.js";
 import type { WorldEvent } from "../api/types.js";
 import type { Store } from "../store/store.js";
@@ -15,11 +18,15 @@ import type { ClassifyDeps } from "./classify.js";
 import { decide } from "./decide.js";
 import type { EventHandler } from "./loop.js";
 import { readMessage } from "./message.js";
+import { writeReply, type WriterDeps } from "./reply.js";
+import { LOOP_LIMIT, looping, speakFor, type PastTurn } from "./speak.js";
 
 export interface HandlerDeps {
   store: Store;
   tracer: Tracer;
   classify: ClassifyDeps;
+  /** Rung 5: the writer (second LLM call) and the emergency number. */
+  writer: WriterDeps;
   /** Config OPEN_CASE_OUT_OF_SCOPE: whether rung 3 opens a Dwelly case for out_of_scope. */
   openCaseOutOfScope: boolean;
   now?: () => string;
@@ -72,7 +79,35 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     }
 
     const r = await decide(deps.classify, current, { ...message, propertyId }, now());
-    const next = r.next;
+    let next = r.next;
+
+    // Rung 5: who gets a message, and why. The loop guard stops a sixth message in a row to
+    // one person while the case does not move; a person looks instead.
+    const reporterName =
+      next.reporter === message.actor.id ? message.actor.name : next.reporter ? ((await store.getActor(next.reporter))?.name ?? null) : null;
+    let recipients = speakFor(current, next, message, reporterName);
+    if (current && recipients.length) {
+      const past = await pastTurns(store, current.id);
+      const now_ = { status: next.status, waitingOn: next.waitingOn, urgency: next.urgency };
+      const stopped = recipients.filter((x) => looping([...past, { ...now_, messagedTo: [x.to] }], x.to, LOOP_LIMIT + 1));
+      if (stopped.length) {
+        next = { ...next, needsReview: true };
+        recipients = recipients.filter((x) => !stopped.includes(x));
+        for (const x of stopped) {
+          tracer.trace("speak.loop_guard", { event_id: event.id, case_id: next.id, to: x.to, reasons: x.reasons, limit: LOOP_LIMIT });
+        }
+      }
+    }
+    const messages: { action: NewAction; reasons: string[]; source: string }[] = [];
+    for (const recipient of recipients) {
+      const w = await writeReply(deps.writer, { recipient, case: next, safetyAdvice: r.safetyAdvice, incoming: message });
+      messages.push({
+        action: { id: `act_${randomUUID()}`, kind: "msg_send", body: { to: recipient.to, subject: w.subject, body: w.body } },
+        reasons: recipient.reasons,
+        source: w.source,
+      });
+    }
+
     const version: CaseVersion = {
       ...next,
       causeKind: "event",
@@ -81,7 +116,8 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       why: r.why,
     };
     const plan = actionsFor(current, next, { openCaseOutOfScope: deps.openCaseOutOfScope });
-    const { applied } = await store.saveCaseVersion(version, plan.actions);
+    // Messages first: a safety text must not wait behind POST /cases.
+    const { applied } = await store.saveCaseVersion(version, [...messages.map((m) => m.action), ...plan.actions]);
 
     tracer.trace("case.version", {
       event_id: event.id,
@@ -107,22 +143,29 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     });
     if (!applied) return;
 
-    // Rung 3: queued in the same transaction as the version; the sender makes the calls.
+    // Queued in the same transaction as the version; the sender makes the calls.
+    for (const m of messages) {
+      const { to, ...body } = m.action.body as { to: string };
+      tracer.trace("action.queued", {
+        event_id: event.id, case_id: next.id, action_id: m.action.id, action: m.action.kind, to, reasons: m.reasons, source: m.source, body,
+      });
+    }
     for (const a of plan.actions) {
       tracer.trace("action.queued", { event_id: event.id, case_id: next.id, action_id: a.id, action: a.kind, body: a.body });
     }
     if (plan.skipped) {
       tracer.trace("action.skipped", { event_id: event.id, case_id: next.id, action: "case_open", reason: plan.skipped });
     }
-    // Rung 5: what we would tell the tenant. Traced only.
-    if (r.safetyAdvice || next.openQuestions.length) {
-      tracer.trace("intent.message_tenant", {
-        event_id: event.id,
-        case_id: next.id,
-        to: message.actor.id,
-        safety_advice: r.safetyAdvice,
-        questions: next.openQuestions,
-      });
-    }
   };
+}
+
+/** The case's past versions caused by events, with who got a message from each. */
+async function pastTurns(store: Store, caseId: string): Promise<PastTurn[]> {
+  const sentTo = new Map<number, string[]>();
+  for (const a of await store.actionsForCase(caseId)) {
+    if (a.kind === "msg_send") sentTo.set(a.caseVersion, [...(sentTo.get(a.caseVersion) ?? []), a.body.to]);
+  }
+  return (await store.caseHistory(caseId))
+    .filter((v) => v.causeKind === "event")
+    .map((v) => ({ status: v.status, waitingOn: v.waitingOn, urgency: v.urgency, messagedTo: sentTo.get(v.version) ?? [] }));
 }
