@@ -140,6 +140,11 @@ export function createHandler(deps: HandlerDeps): EventHandler {
       applied,
       linked_by: linkedBy,
       from: message.actor.id,
+      // The input of the decision, so a trace line alone explains it (npm run story reads it).
+      role: message.actor.role,
+      name: message.actor.name,
+      subject: message.subject,
+      text: message.text,
       property_id: next.propertyId,
       urgency: next.urgency,
       next_step: next.nextStep,

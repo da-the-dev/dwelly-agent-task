@@ -86,7 +86,7 @@ describe("message handler (rungs 2-3)", () => {
     });
     expect(queued[1]?.body).toMatchObject({ urgency: "emergency", property_id: "prop_09" });
     expect(queued[2]?.body).toEqual({ status: "in_progress" });
-    expect(t.line("case.version")).toMatchObject({ event_id: "evt_1", linked_by: "new", applied: true });
+    expect(t.line("case.version")).toMatchObject({ event_id: "evt_1", linked_by: "new", applied: true, role: "tenant", text: gas });
     expect(t.queued("msg_send")[0]).toMatchObject({ to: "tenant_09", reasons: ["new_case"], source: "model" });
   });
 
