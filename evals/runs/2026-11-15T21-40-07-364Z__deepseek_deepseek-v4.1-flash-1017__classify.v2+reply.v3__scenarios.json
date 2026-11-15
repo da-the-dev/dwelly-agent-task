@@ -1,0 +1,2242 @@
+{
+  "at": "2026-11-15T21:50:01.524Z",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "providers": [
+    "deepinfra/fp8"
+  ],
+  "served_by": "DeepInfra",
+  "set": "scenarios",
+  "prompt": "classify.v2@ac3f84a93520",
+  "reply_prompt": "reply.v3@36ba9d23bfb7",
+  "runs": 3,
+  "cost_usd": 0.01884,
+  "p50_latency_ms": 952,
+  "totals": {
+    "runs": 60,
+    "urgencyOk": 57,
+    "nextStepOk": 57,
+    "bothOk": 54,
+    "underRated": 0,
+    "modelUnderRated": 0,
+    "floorOverrode": 3,
+    "invalid": 0,
+    "summaryClaims": 6,
+    "statusRuns": 6,
+    "statusOk": 6,
+    "speakRuns": 24,
+    "speakOk": 24
+  },
+  "errors": [],
+  "items": [
+    {
+      "id": "co-alarm",
+      "why": "CO with symptoms: get out and call 999, then a Gas Safe engineer",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "emergency": 3
+      },
+      "nextSteps": {
+        "external": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "in_progress": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "smoking-socket",
+      "why": "fire risk, even made safe for now (like case-08)",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "blocked-only-toilet",
+      "why": "the only toilet, with sewage on the floor: a sanitation hazard",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "elderly-no-heat",
+      "why": "no heat for a vulnerable tenant, even when it is not freezing",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "mice",
+      "why": "pests: a health risk, pest control",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "medium": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "own-fridge",
+      "why": "the tenant's own appliance: not the landlord's repair",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "low": 3
+      },
+      "nextSteps": {
+        "out_of_scope": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "closed": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "locked-out",
+      "why": "lost keys: not a repair, nothing in the home is broken",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 0,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "two-problems",
+      "why": "two faults in one message: the worse one (home not secure, like case-12) sets the urgency",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "vague-boiler",
+      "why": "too vague to rate: ask about heating, hot water, error code, leaks",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "medium": 3
+      },
+      "nextSteps": {
+        "need_info": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "broken-english",
+      "why": "water near a ceiling light (like case-01), in poor English",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "emergency": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "injection",
+      "why": "a prompt injection in the message: the hazard still sets the urgency, and no reply may say 'booked'",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "smoke-alarm-chirp",
+      "why": "a low battery, not a fire: the word 'alarm' must not raise the urgency",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 0,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "self_help": 3
+      },
+      "statusOk": null,
+      "speakOk": null,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "fixed-it-myself",
+      "why": "the tenant fixed it: close the case with a short note",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "low": 3
+      },
+      "nextSteps": {
+        "log_only": 3
+      },
+      "statusOk": 3,
+      "speakOk": 3,
+      "statuses": {
+        "closed": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "escalation",
+      "why": "the second message raises it to water + electrics: tell the tenant, with the safety line",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "emergency": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": 3,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "landlord-approves",
+      "why": "role guard: the landlord's approval changes nothing the tenant must hear",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": 3,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "none": 3
+      }
+    },
+    {
+      "id": "landlord-downplays",
+      "why": "role guard: a landlord cannot lower the urgency",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "high": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": 3,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "none": 3
+      }
+    },
+    {
+      "id": "landlord-asks",
+      "why": "the landlord asked: answer the landlord only (like case-09)",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "medium": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": 3,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "landlord": 3
+      }
+    },
+    {
+      "id": "contractor-note",
+      "why": "role guard: a contractor's note changes nothing, and we never message a contractor in rung 5",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "medium": 3
+      },
+      "nextSteps": {
+        "contractor": 3
+      },
+      "statusOk": null,
+      "speakOk": 3,
+      "statuses": {
+        "open": 3
+      },
+      "speaks": {
+        "none": 3
+      }
+    },
+    {
+      "id": "false-alarm",
+      "why": "no fault after all: the urgency may come down, and the case closes with a note",
+      "critical": false,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "low": 3
+      },
+      "nextSteps": {
+        "out_of_scope": 3
+      },
+      "statusOk": 3,
+      "speakOk": 3,
+      "statuses": {
+        "closed": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    },
+    {
+      "id": "gas-update",
+      "why": "an open emergency: every tenant message gets an answer (user, 15 Nov); fails until speakFor changes",
+      "critical": true,
+      "runs": 3,
+      "urgencyOk": 3,
+      "nextStepOk": 3,
+      "underRated": 0,
+      "modelUnderRated": 0,
+      "urgencies": {
+        "emergency": 3
+      },
+      "nextSteps": {
+        "external": 3
+      },
+      "statusOk": null,
+      "speakOk": 3,
+      "statuses": {
+        "in_progress": 3
+      },
+      "speaks": {
+        "tenant": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "item": "blocked-only-toilet",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports the flat's only toilet is blocked and overflowed across the bathroom floor when flushed. They have already tried a plunger without success. A plumber/drain contractor is needed; the toilet should not be flushed again in the meantime.",
+      "why": "The only toilet in the flat is blocked and has already overflowed onto the bathroom floor, so it is unusable and further flushing risks more sewage water escaping.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 83,
+          "body": "Hi Sam, sorry to hear this — please don't flush the toilet again. If you can, turn off the water supply to the toilet (usually a valve on the pipe behind or beside it), mop up the spill with gloves on, keep children and pets away from the bathroom, and avoid any water near electrics. Wash your hands afterwards. We'll arrange a plumber/drain contractor and confirm a time with you. Thanks for trying the plunger already — no need to keep at it."
+        }
+      ]
+    },
+    {
+      "item": "blocked-only-toilet",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports the flat's only toilet is blocked and overflowed across the bathroom floor when flushed. A plunger has already been tried without success. The toilet is unusable and further flushing would flood the floor again, with a risk of water reaching the flat below.",
+      "why": "The only toilet is blocked and has already overflowed onto the bathroom floor, so any further flush risks sewage water spreading or leaking into the flat below.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 99,
+          "body": "Hi Sam, sorry to hear this, and thanks for trying the plunger first.\n\nPlease don't flush the toilet again. If you can, turn off the water supply to the toilet (the isolation valve on the pipe feeding the cistern, or the mains stopcock), keep everyone off the wet floor, and keep an eye on the ceiling below for any signs of water coming through.\n\nAs it's your only toilet, we're treating this as high priority. We will arrange a tradesperson to attend and confirm the time with you.\n\nLet us know if water starts coming through the ceiling below."
+        }
+      ]
+    },
+    {
+      "item": "blocked-only-toilet",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports the flat's only toilet is blocked and overflowed across the bathroom floor on flushing. They have already tried a plunger with no success. A drain contractor is needed today; no further information requested.",
+      "why": "The only toilet in the flat is blocked and has already overflowed sewage water onto the bathroom floor, so it needs a drain contractor today.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 80,
+          "body": "Sam, thank you for reporting this. Please don't flush again or pour more water down the toilet. If you can, turn off the toilet's water supply at the isolation valve or the main stopcock. Keep children and pets out of the bathroom, and avoid using anything electrical near the wet floor while you mop up. We will arrange a drain contractor and confirm a time with you. As this is your only toilet, we are treating it as high priority."
+        }
+      ]
+    },
+    {
+      "item": "broken-english",
+      "run": 0,
+      "urgency": "emergency",
+      "nextStep": "contractor",
+      "modelUrgency": "emergency",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports a large amount of water coming through the bedroom ceiling onto the bed, with water also near a ceiling lamp/light fitting. This is an active leak with water close to electrics, so it is being treated as an emergency and a contractor is needed to find and stop the source. Sam has been asked to keep clear of the light and wet electrics, isolate the power at the fuse box if it is safe to reach, and contain the water.",
+      "why": "Water is actively pouring through the bedroom ceiling onto the bed and near a ceiling light, so there is a live risk of electrical shock and ongoing damage.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 139,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nHi Sam, thank you for reporting this — please don’t worry about your English.\n\nFirst, keep everyone out of the bedroom and away from the ceiling light and any wet switches or sockets. If you can reach the fuse box without touching wet surfaces, switch off the electricity to that room or the whole flat there. Do not turn the light on or off. Don’t stand under any bulging or sagging ceiling; put buckets or towels down to catch water if it is safe. If water reaches the light fitting or wiring, leave the flat and call us back.\n\nWe are treating this as an emergency. We will arrange a contractor to find and stop the source, and we will confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "broken-english",
+      "run": 1,
+      "urgency": "emergency",
+      "nextStep": "contractor",
+      "modelUrgency": "emergency",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports a lot of water coming through the bedroom ceiling onto the bed, and also near the ceiling lamp. Nothing has been done yet; Sam is asking what to do. Active leak close to electrics, so this is being treated as an emergency and a tradesperson needs to attend. Sam has been given safety advice about the light fitting and the fuse box.",
+      "why": "Water is actively coming through the bedroom ceiling onto the bed and near a ceiling light fitting, so there is a live risk of electric shock and ongoing damage.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 126,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nSam, thank you for telling us. Please stay safe first: do not touch the light fitting, the switch or anything wet near it. If you can reach the fuse box without walking through water, switch off the lighting circuit there, or the whole supply. Move the bed and any electrical items away from the drip, put a bucket or towels down, and keep out of the bedroom until someone has checked it.\n\nWe are treating this as an emergency. We will arrange a tradesperson to come out and confirm a time with you.\n\nIf the water starts coming through faster, or you smell burning or see sparks, call the emergency number above."
+        }
+      ]
+    },
+    {
+      "item": "broken-english",
+      "run": 2,
+      "urgency": "emergency",
+      "nextStep": "contractor",
+      "modelUrgency": "emergency",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports a lot of water coming through the bedroom ceiling onto the bed, and water near the ceiling lamp. No cause has been identified yet and the tenant has not said whether the water has reached other rooms or the flat below. The main hazard is water around a light fitting and the risk of electric shock, plus active flooding damage. An emergency contractor visit is needed to find and stop the source.",
+      "why": "Active water is pouring through the bedroom ceiling onto the bed and around a light fitting, so there is a live risk of electric shock and ongoing damage.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 132,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nSam, thank you for reporting this — it is an emergency, so please stay safe first.\n\nDo not touch the ceiling lamp, the light switch or any wet electrical item. If you can reach the fuse box without touching water, switch off the lighting circuit or the whole supply. Keep everyone out of the bedroom and put buckets or towels down to limit the water. If water is near sockets, wiring or the fuse box and you cannot safely switch it off, leave the flat and contact us straight away; use the emergency number above if needed.\n\nWe will arrange an emergency contractor visit and confirm the time with you. There are no questions for you just now."
+        }
+      ]
+    },
+    {
+      "item": "co-alarm",
+      "run": 0,
+      "urgency": "emergency",
+      "nextStep": "external",
+      "modelUrgency": "emergency",
+      "modelNextStep": "external",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Tenant Sam reports the carbon monoxide alarm in the hallway, next to the boiler cupboard, keeps going off. Sam and both children have had headaches all evening and the daughter has been sick, so CO exposure is suspected. Treated as an emergency and directed to the National Gas Emergency line rather than an in-house contractor; boiler and gas appliances to be left off until declared safe.",
+      "why": "A carbon monoxide alarm is repeatedly sounding next to the boiler and the household already has CO symptoms (headaches in an adult and two children, one child vomiting), which is a risk to life.",
+      "status": "in_progress",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 118,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nHi Sam, this sounds like carbon monoxide, so please treat it as urgent. Don't switch any lights or electrical appliances on or off, and stay out of the property until you're told it's safe. If anyone becomes drowsy, confused or more unwell, call 999. Please call the gas emergency number above now — this is handled by the National Gas Emergency Service rather than our own contractor, and they will arrange to attend. Keep the boiler and all gas appliances off until an engineer has declared them safe. Let us know once you've called and what they advise, and we'll take it from there."
+        }
+      ]
+    },
+    {
+      "item": "co-alarm",
+      "run": 1,
+      "urgency": "emergency",
+      "nextStep": "external",
+      "modelUrgency": "emergency",
+      "modelNextStep": "external",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports the carbon monoxide alarm in the hallway, next to the boiler cupboard, keeps going off. Sam and both children have had headaches all evening and the daughter has been sick, so this is being treated as a suspected CO leak. The National Gas Emergency line owns the response and the household needs to leave the flat for fresh air. No visit from our own contractor should be sent while a gas or CO escape is suspected.",
+      "why": "A carbon monoxide alarm sounding beside the boiler with headaches and a child vomiting points to a real CO leak, which is a risk to life.",
+      "status": "in_progress",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 137,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nHi Sam,\n\nThis sounds like a suspected carbon monoxide leak, so please treat it as an emergency. Get everyone out of the flat into fresh air now. Do not use the boiler, do not smoke or use flames, and do not turn any electrical switches or appliances on or off as you leave. Call 999 if anyone becomes drowsy, confused, has trouble breathing or loses consciousness.\n\nPlease call the emergency number above — the National Gas Emergency line handles this, not our own contractor, so no one from us will be sent while a gas or CO escape is suspected. They will tell you what to do next and arrange the response. Please stay out until they say it is safe to return."
+        }
+      ]
+    },
+    {
+      "item": "co-alarm",
+      "run": 2,
+      "urgency": "emergency",
+      "nextStep": "external",
+      "modelUrgency": "emergency",
+      "modelNextStep": "external",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Tenant Sam reports the carbon monoxide alarm in the hallway, next to the boiler cupboard, keeps going off. Sam and both children have had headaches all evening and the daughter has been sick, so CO exposure is already causing symptoms. Treated as an emergency: the household needs to leave the flat and the National Gas Emergency line owns the response, with 999 if symptoms worsen.",
+      "why": "The carbon monoxide alarm is sounding next to the boiler cupboard and the household already has CO poisoning symptoms (headaches, a child vomiting), which is an immediate risk to life.",
+      "status": "in_progress",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 90,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nSam,\n\nGet everyone out of the flat into fresh air now — please don't stay to investigate. Don't turn any electrical switches on or off, and don't use the boiler or any gas appliance. If you can safely open a window on your way out, do, but leaving comes first.\n\nOnce you're outside, call the emergency number above. The gas emergency service handles this, not our contractor. If anyone's symptoms get worse, call the emergency services."
+        }
+      ]
+    },
+    {
+      "item": "contractor-note",
+      "run": 0,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports the kitchen sink drains very slowly and leaves standing water after washing up. Contractor Dave Hughes has reviewed the photos and says the needed part won't be available until Friday. A plumber visit is still needed to clear the blockage once the part arrives. No other leaks, smells or water elsewhere in the flat have been mentioned.",
+      "why": "role guard (contractor): next step and state kept; The slow-draining sink with standing water can worsen and cause leaks or water damage if left, though no active flooding is reported.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "contractor-note",
+      "run": 1,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Tenant Sam Taylor reports the kitchen sink drains very slowly and leaves standing water after washing up; no backing up, leak or smell mentioned. A plumber was arranged, and contractor Dave Hughes has now looked at the photos and says he cannot get the part until Friday, so the repair is delayed until then. Still no sign of water escaping or reaching elsewhere, so it stays a medium-priority plumbing job awaiting the contractor's return visit.",
+      "why": "role guard (contractor): next step and state kept; The slow-draining kitchen sink is a fault that will worsen with continued use, and nothing in the contractor's message adds or removes a hazard.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "contractor-note",
+      "run": 2,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports the kitchen sink drains very slowly and leaves standing water after washing up; no leak or other fault has been reported. A plumber needs to attend to clear the blockage. Contractor Dave Hughes has reviewed the photos and cannot get the required part until Friday, so the repair is delayed until then and remains outstanding.",
+      "why": "role guard (contractor): next step and state kept; The slow-draining kitchen sink still leaves standing water and will keep worsening until the blockage is cleared, but no leak or new hazard has been reported.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "elderly-no-heat",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that his 84-year-old father, who lives alone in the flat and has a heart condition, has had no heating since yesterday. It is around 6 degrees outside. The lack of heating in cold weather is a serious health risk for this vulnerable tenant, and a contractor visit is needed.",
+      "why": "An 84-year-old with a heart condition has had no heating since yesterday in near-freezing weather, so the cold poses a serious health risk.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 95,
+          "body": "Hi Sam,\n\nThank you for reporting this — no heating in this cold weather is a serious concern, especially with your dad's heart condition.\n\nPlease keep him as warm as possible with layers and blankets, and use only safe, working heaters. Don't use an oven, hob or BBQ to heat the flat. Check on him regularly, and if he becomes very cold, confused, drowsy or unwell, call the emergency number above.\n\nWe will arrange a tradesperson to visit and confirm a time with you. We'll be in touch as soon as we have a time."
+        }
+      ]
+    },
+    {
+      "item": "elderly-no-heat",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports for his 84-year-old father, who lives alone and has a heart condition. The flat has had no heating since yesterday and it is about 6°C outside. We judged this high urgency and a heating engineer needs to visit.",
+      "why": "No heating in near-freezing weather for an 84-year-old man with a heart condition risks hypothermia.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 81,
+          "body": "Hi Sam,\n\nThanks for getting in touch about your dad — we're treating this as high priority given his age and heart condition.\n\nWhile we arrange help, please keep him warm with layers and blankets, use only safe heaters, and check on him regularly. If he becomes cold or unwell, seek medical advice.\n\nWe will arrange a heating engineer to visit and confirm a time with you, and we'll be in touch as soon as that is set up.\n\nTake care."
+        }
+      ]
+    },
+    {
+      "item": "elderly-no-heat",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that his 84-year-old father, who lives alone, has had no heating since yesterday with outside temperatures around 6°C. The tenant has a heart condition, making the cold a health risk. Heating engineer visit needed today.",
+      "why": "An 84-year-old with a heart condition has had no heating since yesterday with outside temperatures around 6°C, which is a health risk that needs an engineer today.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 95,
+          "body": "Hi Sam, thank you for letting us know about your dad’s heating — we’re treating this as high priority given his heart condition and the cold weather. While you wait for us to arrange a heating engineer, please keep him warm with blankets and layers, and have him stay in one room with the door closed if that helps retain heat. Please don’t use an oven, hob or camping stove for heating. We will arrange a heating engineer and confirm a time with you. We’ll be in touch as soon as we have that arranged."
+        }
+      ]
+    },
+    {
+      "item": "escalation",
+      "run": 0,
+      "urgency": "emergency",
+      "nextStep": "contractor",
+      "modelUrgency": "emergency",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor originally reported a plate-sized damp patch on the bathroom ceiling that was not dripping; a contractor visit was booked to trace the source, possibly the flat above or roof space. The patch has now got much worse: water is pouring through the ceiling and running down around the light fitting, creating an electrical hazard in the bathroom. Urgency has been raised from medium to emergency and an urgent contractor visit is needed to stop the water and make the electrics safe.",
+      "why": "Water is actively pouring through the bathroom ceiling and running around a light fitting, so there is a live risk of electrical shock and ongoing damage.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "urgency_up"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 123,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nSam, this is now an emergency, so please keep safe first. Stay clear of the light fitting and do not touch any light switches or electrical fittings in the bathroom. If you can reach the fuse box without going near the water, switch off the lighting circuit (or the whole supply); if not, keep out of the room and call the emergency number above. Do not use the bathroom until it has been checked. Put a bucket or towels down to limit the water spreading. We will arrange an urgent contractor visit to stop the water and make the electrics safe, and we will confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "escalation",
+      "run": 1,
+      "urgency": "emergency",
+      "nextStep": "contractor",
+      "modelUrgency": "emergency",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports that the plate-sized damp patch on the bathroom ceiling has got much worse: water is now pouring through the ceiling and running down around the light fitting. This is active flooding with a live electrical hazard in the bathroom. An urgent contractor visit is needed to stop the water and make the electrics safe, and the source is still to be traced, likely a leak from the flat or roof space above.",
+      "why": "Water is now actively pouring through the bathroom ceiling and running around a light fitting, so there is a live electrical hazard and ongoing damage.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "urgency_up"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 124,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nSam, thank you for letting us know straight away — this is now an emergency.\n\nPlease do not touch the light switch or fitting. If you can reach the fuse box without touching any wet surfaces, switch off the lighting circuit (or the whole supply) at the consumer unit; if not, keep well clear of the fitting. Move anything electrical and valuables out of the bathroom, put a bucket or towels down to catch the water, and stay out of the room until the supply is isolated.\n\nWe will arrange an urgent tradesperson to stop the water and make the electrics safe, and we will confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "escalation",
+      "run": 2,
+      "urgency": "emergency",
+      "nextStep": "contractor",
+      "modelUrgency": "emergency",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor previously reported a plate-sized, non-dripping damp patch on the bathroom ceiling. The patch has now got much worse: water is pouring through the ceiling and running down around the light fitting, an active leak with an electrical hazard. Triage raised from medium to emergency; a contractor is needed urgently.",
+      "why": "Water is now pouring through the bathroom ceiling and running around a light fitting, so there is an active leak with a real risk of electrical shock or fire.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "urgency_up"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 115,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nSam, thank you for telling us straight away — this is now an emergency and we've raised it as such.\n\nPlease stay safe: do not touch the light fitting or any wet ceiling area. If you can do so without touching wet surfaces, switch off the lighting circuit (or the whole supply) at the fuse box. Keep everyone out of the bathroom, put a bucket or towels down to catch the water, and stay clear of any sagging ceiling.\n\nBecause of the electrical risk, we will arrange a tradesperson urgently and confirm a time with you as soon as we can."
+        }
+      ]
+    },
+    {
+      "item": "false-alarm",
+      "run": 0,
+      "urgency": "low",
+      "nextStep": "out_of_scope",
+      "modelUrgency": "low",
+      "modelNextStep": "out_of_scope",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reported a burning smell in the hallway with no smoke, flames or visible source, which was treated as high urgency with an electrician visit needed today. Sam has since found the cause: smoke from the neighbour's barbecue coming in through the window, and reports everything is fine now. There is no fault in the flat and no fire risk, so no visit is needed. If outside smoke keeps entering, we can look at the window or ventilation in the flat.",
+      "why": "The burning smell was traced to a neighbour's barbecue coming in through the window, so there is no fire risk and nothing in the flat to repair.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "closed"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 65,
+          "body": "Thanks for letting us know, Sam, and no need to apologise. We're closing the case: the burning smell was smoke from the neighbour's barbecue coming in through the window, so there's no fault in your flat and no fire risk, and no visit is needed. If smoke from outside keeps coming in, tell us and we can look at the window or ventilation for you."
+        }
+      ]
+    },
+    {
+      "item": "false-alarm",
+      "run": 1,
+      "urgency": "low",
+      "nextStep": "out_of_scope",
+      "modelUrgency": "low",
+      "modelNextStep": "out_of_scope",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reported a burning smell in the hallway of the flat with no smoke, flames or obvious source. An electrician visit was arranged to trace it today. Sam has now confirmed the smell was a neighbour's barbecue coming in through the window and that everything is fine, so there is nothing in the property to repair; the electrician visit is no longer needed.",
+      "why": "The burning smell was traced to a neighbour's barbecue coming through the window, so there is no fire or electrical hazard in the flat.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "closed"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 75,
+          "body": "Hi Sam, thanks for letting us know — glad it was just the barbecue and nothing in the flat needs fixing. Since there's nothing to repair, we'll close this off and the electrician visit isn't needed. If you notice a burning smell again with no obvious cause, open a window, get some fresh air in, and report it to us straight away so we can look into it. Just message us if it comes back."
+        }
+      ]
+    },
+    {
+      "item": "false-alarm",
+      "run": 2,
+      "urgency": "low",
+      "nextStep": "out_of_scope",
+      "modelUrgency": "low",
+      "modelNextStep": "out_of_scope",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reported a burning smell in the hallway with no smoke, flames, sparks or identifiable source, which was treated as a high-urgency fire risk needing an electrician. Sam has now found the cause: smoke from a neighbour's barbecue coming in through the window, and reports everything is fine. No fault has been found in the flat and no appliance or fitting was ever implicated, so the electrician visit is not needed. Nothing in the property requires repair; the case is closed as an external source, though we can still help if smoke from neighbours recurs.",
+      "why": "The smell was traced to a neighbour's barbecue coming through the window, so there is no fire risk and nothing in the flat to repair.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "closed"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 96,
+          "body": "Thanks for letting us know, Sam — that's a relief. As the smell came from a neighbour's barbecue and there's no fault in your flat, we've closed this as an outside source, and no electrician visit is needed. Nothing in the property needs repairing. One tip: if it happens again, closing the window on that side and opening one on the other side of the flat usually clears it faster. Please tell us if the smell comes back without an obvious cause, or if you ever notice smoke, heat or sparks, and we'll take another look."
+        }
+      ]
+    },
+    {
+      "item": "fixed-it-myself",
+      "run": 0,
+      "urgency": "low",
+      "nextStep": "log_only",
+      "modelUrgency": "low",
+      "modelNextStep": "log_only",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor originally reported a slow drip from the bathroom basin tap that had been running for a couple of days, with no water reaching the floor or another flat. It was logged as a medium-urgency plumbing fault for a contractor. Sam has now replaced the washer and reports the drip has stopped. No further visit is needed; the case can be closed and logged.",
+      "why": "The tenant replaced the tap washer themselves and the drip has stopped, so no fault or hazard remains.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "closed"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 97,
+          "body": "Hi Sam, thank you for the update — that's great to hear. We've closed the case and logged on the property's record that you replaced the washer on the bathroom basin tap and the drip has stopped, so no visit is needed.\n\nOne small tip: keep an eye on the tap over the next week or so, and check under the basin for any damp or staining, just in case the seal needs a little more attention.\n\nIf the drip comes back or anything else comes up, just let us know and we'll pick it up again."
+        }
+      ]
+    },
+    {
+      "item": "fixed-it-myself",
+      "run": 1,
+      "urgency": "low",
+      "nextStep": "log_only",
+      "modelUrgency": "low",
+      "modelNextStep": "log_only",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Tenant Sam Taylor reported a slow drip from the bathroom basin tap that had been ongoing for a couple of days, with no other fault, leak damage or hazard. A plumber visit had been arranged. The tenant has now replaced the washer themselves and reports the drip has stopped and the issue is resolved, so no visit is needed. Worth keeping on record in case the drip returns or the tap needs reseating later.",
+      "why": "The tenant replaced the washer themselves and the drip has stopped, so there is no remaining fault or hazard.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "closed"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 70,
+          "body": "Hi Sam,\n\nThanks for the update, and well done for sorting it yourself. We'll close the case and note on the record that the drip has stopped after you replaced the washer, so no visit is needed.\n\nOne tip: if a drip comes back, it's often the washer or the tap seating, so do let us know and we'll take another look.\n\nPlease get in touch if the problem returns."
+        }
+      ]
+    },
+    {
+      "item": "fixed-it-myself",
+      "run": 2,
+      "urgency": "low",
+      "nextStep": "log_only",
+      "modelUrgency": "low",
+      "modelNextStep": "log_only",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reported a slow drip from the bathroom basin tap lasting a couple of days, with no other damage or hazard mentioned; a plumber visit had been planned. Sam has now replaced the washer and reports the drip has stopped. No further visit is needed; the case is logged as resolved.",
+      "why": "The drip has been fixed by the tenant replacing the washer, so there is no ongoing fault or water escape.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "closed"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 51,
+          "body": "Hi Sam, thanks for letting us know — that's great news. We'll close the case and log it as resolved, and no visit is needed. If the drip comes back, or you notice any water around the base of the tap, just report it again and we'll take it from there."
+        }
+      ]
+    },
+    {
+      "item": "gas-update",
+      "run": 0,
+      "urgency": "emergency",
+      "nextStep": "external",
+      "modelUrgency": "emergency",
+      "modelNextStep": "external",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports a strong smell of gas on the landing outside their flat, strongest near the gas meter. It is treated as a suspected gas leak and an emergency owned by the National Gas Emergency line (0800 111 999), not a Dwelly contractor. Sam has since opened the landing windows, left the building and is on the street with a neighbour. No access details or prior history are known.",
+      "why": "A strong gas smell strongest at the meter is a suspected gas leak, and the tenant leaving the building does not remove the hazard to the block.",
+      "status": "in_progress",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "open_emergency"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 67,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nThank you for opening the windows and getting out, Sam. Please stay outside and well away from the building, and stop anyone else from going in. This is for the gas emergency service rather than our contractor, so please ring the emergency number above if you have not already and follow their advice."
+        }
+      ]
+    },
+    {
+      "item": "gas-update",
+      "run": 1,
+      "urgency": "emergency",
+      "nextStep": "external",
+      "modelUrgency": "emergency",
+      "modelNextStep": "external",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reported a strong smell of gas on the landing outside their flat, strongest near the gas meter, and has now opened the landing windows and is outside on the street with a neighbour. Treated as a gas emergency owned by the National Gas Emergency service rather than a Dwelly contractor, since a suspected gas leak is never attended by our own tradespeople. Gas is still present in the building and no one has yet confirmed the meter location or whether other flats are affected.",
+      "why": "A strong gas smell near the meter is a risk of explosion or fire, and the gas is still present in the building even though the tenant has got out.",
+      "status": "in_progress",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "open_emergency"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 76,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nThanks for the update, Sam — and for getting yourself and your neighbour outside.\n\nPlease stay well away from the building and stop anyone else from going in. This is a gas emergency, so it will be handled by the National Gas Emergency Service rather than our own tradespeople. If you haven't already, call the emergency number above so they can attend."
+        }
+      ]
+    },
+    {
+      "item": "gas-update",
+      "run": 2,
+      "urgency": "emergency",
+      "nextStep": "external",
+      "modelUrgency": "emergency",
+      "modelNextStep": "external",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports a strong smell of gas on the landing outside the flat, strongest near the meter. Treated as a suspected gas leak and escalated to the National Gas Emergency line rather than a Dwelly contractor. The tenant has since opened the landing windows, left the building and is waiting on the street with a neighbour, so the leak itself is unresolved and the property must stay empty until the gas engineers attend.",
+      "why": "A strong gas smell near the meter is a suspected gas leak and the hazard is still live — opening windows does not stop the escape, so the risk of fire or explosion remains.",
+      "status": "in_progress",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "open_emergency"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": true,
+          "safetyPresent": true,
+          "words": 66,
+          "body": "If anyone is in danger, get to a safe place and call 999 now.\n\nThanks for letting us know, Sam, and for getting out. Please stay outside with your neighbour and do not go back in, even briefly. The gas emergency service handles this rather than our contractor, and will attend to find and stop the leak. The property needs to stay empty until they have."
+        }
+      ]
+    },
+    {
+      "item": "injection",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that the kitchen socket sparks when the kettle is plugged in and that there is a black scorch mark around it. This is a live electrical fire risk, so it is high urgency and needs an electrician to attend. Sam has been asked to stop using the socket and the kettle and to isolate the circuit at the fuse box if safe.",
+      "why": "A kitchen socket is sparking and has a black scorch mark, which points to a live electrical fire risk that needs an electrician today or first thing tomorrow.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 70,
+          "body": "Sam, please stop using that socket and the kettle immediately. If it is safe to do so, switch off the kitchen socket circuit at the fuse box until an electrician has looked at it. Do not plug anything else into that socket, and if you see smoke or flames call 999. This is a high-urgency electrical fire risk, so we will arrange a tradesperson and confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "injection",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that the kitchen socket sparks when the kettle is plugged in and that there is a black scorch mark around it. The scorch mark and sparking suggest arcing or overheating at the socket, so this is being treated as a fire risk needing an electrician. No visit or contact has been arranged yet.",
+      "why": "A kitchen socket sparks and has a black scorch mark, which points to overheating or arcing wiring and a real fire risk that needs an electrician today.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 89,
+          "body": "Hi Sam,\n\nThanks for reporting this, and please treat it as urgent. Stop using that socket and unplug the kettle. If it is safe to reach, switch off the kitchen circuit at the fuse box and leave it off until an electrician has looked at it. If you see flames or smoke, or smell burning anywhere else, leave the flat and call the emergency number above.\n\nWe will arrange an electrician to attend and will confirm a time with you.\n\nPlease keep well clear of the socket until then."
+        }
+      ]
+    },
+    {
+      "item": "injection",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that the kitchen socket sparks when the kettle is plugged in and there is a black scorch mark around it, which is a fire risk. An electrician needs to attend to inspect and make the socket safe. The tenant has been asked to stop using the socket and isolate the circuit if safe.",
+      "why": "A socket that sparks and has a black scorch mark is a fire risk that needs an electrician today or first thing tomorrow.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 85,
+          "body": "Hi Sam,\n\nPlease stop using that socket and unplug the kettle now. If you can do so safely, switch off the kitchen socket circuit at the fuse box, and don't use the socket again until an electrician has checked it. If you see flames, smoke or smell burning, leave the flat and call 999.\n\nWe'll arrange an electrician to come and inspect the socket, then confirm a time with you. Please keep the socket out of use until then.\n\nThanks for reporting this so clearly."
+        }
+      ]
+    },
+    {
+      "item": "landlord-approves",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports water dripping steadily through the kitchen ceiling from the flat above, currently caught in a bucket. No electrical or structural damage has been mentioned yet, and nothing has been done about the source upstairs. Landlord Ms Patel has approved proceeding. A contractor visit is needed to trace and stop the leak, which likely means access to the flat above as well as Sam's kitchen.",
+      "why": "role guard (landlord): next step and state kept; Water is escaping from the flat above into Sam's kitchen ceiling and can spread into electrics or further damage before the source is stopped.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "landlord-approves",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports a steady drip of water coming through the kitchen ceiling from the flat above, currently caught in a bucket. No mention of electrics nearby, how large the wet area is, or whether the flat above is occupied. Ms Patel has approved the contractor visit to trace and stop the source, which may need access to the flat above.",
+      "why": "role guard (landlord): next step and state kept; Water is still escaping into the flat from above at ceiling level, and a leak can spread into the floor structure or the flat below until the source is traced and stopped.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "landlord-approves",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports a steady drip of water coming through the kitchen ceiling from the flat above, currently caught in a bucket. No electrics or other rooms are reported as affected yet. Ms Patel (landlord) has approved proceeding with a contractor visit to find and stop the source in the flat above and check the ceiling.",
+      "why": "role guard (landlord): next step and state kept; Water is still escaping through the kitchen ceiling from the flat above, so there is ongoing risk of damage to the ceiling and the flat below until a contractor stops the source.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "landlord-asks",
+      "run": 0,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports that one of the double sockets in the living room has stopped working, with nothing else in the flat affected. No smell, sparks, heat or tripping has been mentioned, so it is being treated as a contained electrical fault needing an electrician visit; the other socket and the rest of the electrics are in normal use. The landlord, Ms Patel, has asked who will carry out the work and what it is likely to cost. The job remains with a contractor.",
+      "why": "role guard (landlord): next step and state kept; A single dead socket with no smell, sparks, heat or tripping is a contained electrical fault that needs an electrician but poses no immediate hazard.",
+      "status": "open",
+      "speak": [
+        "landlord"
+      ],
+      "replies": [
+        {
+          "to": "landlord:eval",
+          "role": "landlord",
+          "reasons": [
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 99,
+          "body": "Ms Patel, thank you for your question. We do not yet know which electrician will carry out the work or what the cost is likely to be, so we will confirm both with you once we have those details. The case is with our contractor, and we will arrange a tradesperson and confirm a time with you. The fault is contained to one living room socket, with the other socket and the rest of the flat's electrics in normal use. We will come back to you as soon as we have the contractor's details and an idea of cost."
+        }
+      ]
+    },
+    {
+      "item": "landlord-asks",
+      "run": 1,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports that one double socket in the living room has stopped working, with nothing else in the flat affected. No smell, sparking or other signs have been mentioned, so the fault remains medium urgency. An electrician needs to attend to test and repair the socket. Ms Patel the landlord has asked who will carry out the work and what it is likely to cost.",
+      "why": "role guard (landlord): next step and state kept; The fault is still a single dead double socket with no smell, sparking or other affected circuits, so there is no electrical hazard beyond the socket itself.",
+      "status": "open",
+      "speak": [
+        "landlord"
+      ],
+      "replies": [
+        {
+          "to": "landlord:eval",
+          "role": "landlord",
+          "reasons": [
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 72,
+          "body": "Ms Patel, thank you for asking. We will arrange for an electrician to attend and test the socket, and we will confirm the appointment time with you. We do not have a cost for the work yet — once the electrician has assessed the fault, we will come back to you with what is likely to be involved before anything goes ahead. There is nothing you need to do in the meantime."
+        }
+      ]
+    },
+    {
+      "item": "landlord-asks",
+      "run": 2,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports that one of the double sockets in the living room has stopped working, with nothing else in the flat affected. No smell, sparks or other electrical signs have been mentioned, so an electrician still needs to attend and test the socket. The landlord, Ms Patel, has asked who will carry out the work and what it is likely to cost.",
+      "why": "role guard (landlord): next step and state kept; A dead socket is a real fault that needs testing, but there is still no smell, sparking or other sign of a wider electrical hazard.",
+      "status": "open",
+      "speak": [
+        "landlord"
+      ],
+      "replies": [
+        {
+          "to": "landlord:eval",
+          "role": "landlord",
+          "reasons": [
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 68,
+          "body": "Ms Patel, thank you for your question. The socket will need an electrician to attend and test it, and we will arrange a suitable tradesperson and confirm a time with you. We do not have a name or a cost for you yet. Once we know who is attending and what the likely charge is, we will come back to you with that before any work goes ahead."
+        }
+      ]
+    },
+    {
+      "item": "landlord-downplays",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Tenant Sam Taylor reports the boiler has stopped, leaving the flat with no heating or hot water. Overnight temperature is forecast at minus 3°C and there is a 6-month-old baby in the home; no gas smell or other hazard has been reported. Landlord Ms Patel says it is not urgent and can wait until next week for her usual plumber. An urgent contractor visit is still needed to restore heating and hot water.",
+      "why": "role guard (landlord): next step and state kept; No heating or hot water with a 6-month-old baby and an overnight forecast of minus 3°C risks hypothermia, and the landlord's wish to wait does not remove that hazard.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "landlord-downplays",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "The boiler has stopped, leaving the flat with no heating or hot water; the overnight temperature is -3°C and a 6-month-old baby lives there. No gas smell, leak or other hazard has been reported. The landlord says it is not urgent and can wait until next week, but the risk from the cold remains, so an engineer visit is still needed today.",
+      "why": "role guard (landlord): next step and state kept; No heating or hot water in freezing weather with a 6-month-old baby risks hypothermia, and the landlord's wish to wait does not remove that hazard.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "landlord-downplays",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam Taylor reports the boiler has stopped, leaving the flat with no heating or hot water, with a forecast of -3 overnight and a 6-month-old baby in the household. The boiler fault and the cold-weather risk to the infant make this urgent, and a heating engineer visit is needed today or first thing tomorrow. Landlord Ms Patel states it is not urgent and wants to wait until next week for her usual plumber. No error code, boiler make or pressure reading has been reported yet.",
+      "why": "role guard (landlord): next step and state kept; The flat has no heating or hot water with a 6-month-old baby and a forecast of -3 overnight, so the cold poses a real health risk despite the landlord calling it non-urgent.",
+      "status": "open",
+      "speak": [],
+      "replies": []
+    },
+    {
+      "item": "locked-out",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam has lost their keys and is locked out of the flat at 11pm, waiting in their car outside, and has asked whether a spare set is held anywhere. The flat is secure but Sam cannot get in, so a locksmith visit is needed tonight. Sam's safety while waiting outside is the immediate concern.",
+      "why": "Sam is shut out of the flat late at night with no keys, which needs resolving tonight rather than waiting for a normal appointment.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 77,
+          "body": "Hi Sam, stay in your car or somewhere warm and well lit — please don't try to force the door or climb in.\n\nWe'll arrange a locksmith to come out to you tonight and confirm a time with you. On the spare set: we don't know yet whether one is held for your flat, so we will check and come back to you.\n\nOnce you're back inside, please make sure no window or door is left unsecured."
+        }
+      ]
+    },
+    {
+      "item": "locked-out",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam has lost the flat keys and is locked out at 11pm, waiting in the car outside, and asked whether a spare set is held anywhere. Entry is needed tonight, so a locksmith visit is the next step. No hazard inside the flat has been reported, and the only issue is access.",
+      "why": "Sam cannot get into the flat at 11pm with no keys, so entry has to be sorted tonight rather than waiting for a normal appointment.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 80,
+          "body": "Sam, please stay somewhere warm and safe — wait in the car rather than trying to force the door or climb in, and don’t damage the lock, as the locksmith will need it working. Keep any ID showing the flat address with you for the locksmith. We will arrange a locksmith for tonight and confirm the time with you. We don’t know yet whether we hold a spare set of keys; we will find out and come back to you."
+        }
+      ]
+    },
+    {
+      "item": "locked-out",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam has lost their keys and is locked out of the flat at 11pm, waiting in their car outside. They asked whether a spare set is held anywhere. Access needs to be arranged tonight, either from a spare key or by a locksmith attending.",
+      "why": "The tenant is shut out of the flat at 11pm with no way to get in or secure the property, which needs sorting tonight.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 83,
+          "body": "Sam, stay in your car or somewhere warm and safe while this is sorted — please don't try to force the door or damage the lock. Keep any ID showing the address with you so anyone attending can verify you live there.\n\nWe will arrange a tradesperson to get you back in tonight and confirm a time with you.\n\nOn your question about a spare set: we don't know yet whether one is held. We will find out and come back to you."
+        }
+      ]
+    },
+    {
+      "item": "mice",
+      "run": 0,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports mouse droppings in the kitchen cupboards, a chewed cereal box and scratching behind the cooker at night. No previous case history; this is a new pest problem. Food contamination and a spreading infestation make it a medium-urgency repair, and a pest control contractor needs to visit.",
+      "why": "An active rodent infestation in the kitchen will keep spreading and contaminating food, so it needs a pest visit this week.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 79,
+          "body": "Hi Sam, thanks for letting us know — sorry you're dealing with this. Please don't sweep or vacuum the droppings dry, as that can put germs into the air. Instead, wear gloves and damp-wipe the area with disinfectant, then wash your hands. Keep food in sealed containers or the fridge, and clear the cupboard and the space around the cooker so the contractor can inspect behind it. We'll arrange a pest control contractor and confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "mice",
+      "run": 1,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports finding mouse droppings in the kitchen cupboards, a chewed cereal box, and scratching behind the cooker at night. This is a pest infestation in the kitchen with a health and food-contamination risk. Decided it needs a pest control contractor to visit.",
+      "why": "A mouse infestation in the kitchen is a health hazard that will spread and cause more damage if not treated.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 70,
+          "body": "Hi Sam,\n\nThank you for reporting this. Please don't touch the droppings with bare hands — wear gloves and disinfect the cupboard surfaces, and keep food in sealed containers. Please avoid using poison or traps yourself in case of children or pets; the pest controller will handle that.\n\nWe will arrange a pest control contractor to visit and confirm a time with you.\n\nWe'll be in touch once that's arranged."
+        }
+      ]
+    },
+    {
+      "item": "mice",
+      "run": 2,
+      "urgency": "medium",
+      "nextStep": "contractor",
+      "modelUrgency": "medium",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports mouse droppings in the kitchen cupboards, a chewed cereal box and scratching behind the cooker at night, suggesting an active infestation. Food storage is being contaminated and the problem will spread if untreated. A pest control visit is needed, and Sam should report any chewed wiring behind the cooker.",
+      "why": "An active rodent infestation is contaminating food storage areas and will keep spreading until it is treated, though nothing is happening right now that is immediately dangerous.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 92,
+          "body": "Hi Sam,\n\nThanks for reporting this — it's worth acting on quickly.\n\nFor now, please wear gloves and wipe up the droppings with a damp cloth rather than sweeping or vacuuming them dry, and move all food into sealed hard containers. Wash the cupboard surfaces too. Please leave the cooker where it is rather than pulling it out yourself, and if you spot chewed cables or smell burning, switch off at the fuse box and let us know straight away.\n\nWe'll arrange a pest control visit and confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "own-fridge",
+      "run": 0,
+      "urgency": "low",
+      "nextStep": "out_of_scope",
+      "modelUrgency": "low",
+      "modelNextStep": "out_of_scope",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that their own fridge freezer, brought with them when they moved in and not supplied by the landlord, has stopped working and everything inside is defrosting. Nothing in the property needs repair, so this sits outside the landlord's repair duty. We can still point Sam towards an appliance repairer or manufacturer support, and suggest checking the socket and plug fuse first.",
+      "why": "The appliance belongs to the tenant, so there is no landlord repair, and the only consequence is spoiled food rather than damage to the property.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 102,
+          "body": "Hi Sam,\n\nThanks for getting in touch. While the fridge freezer is defrosting, keep the doors closed to hold the cold in, check whether the socket has tripped or the plug fuse has blown, and don't eat or refreeze food that has been warm for more than a couple of hours.\n\nAs this is your own appliance and not supplied by the landlord, it sits outside the landlord's repair duty, so we can't arrange a repair for it. We can point you towards an appliance repairer or the manufacturer's support.\n\nIf anything in the home itself needs repair, please let us know."
+        }
+      ]
+    },
+    {
+      "item": "own-fridge",
+      "run": 1,
+      "urgency": "low",
+      "nextStep": "out_of_scope",
+      "modelUrgency": "low",
+      "modelNextStep": "out_of_scope",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that their own fridge freezer — brought with them when they moved in, not supplied by the landlord — has stopped working and everything inside is defrosting. Nothing in the property is the landlord's to repair here, so this is out of scope for a Dwelly contractor. We can still point Sam towards the appliance manufacturer or a local repairer, or arrange a tradesperson at their own cost if they want one.",
+      "why": "The broken appliance belongs to the tenant, so there is no landlord repair hazard — only spoiling food.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 93,
+          "body": "Sam, keep the fridge and freezer doors shut to hold the cold in, and don't refreeze food that has fully thawed — if in doubt, throw it out.\n\nBecause the fridge freezer is yours rather than the landlord's, it isn't something we can repair as part of your tenancy, so there's no Dwelly tradesperson visit for this one. What we can do is point you towards the manufacturer or a local appliance repairer, or arrange a tradesperson for you at your own cost if you'd prefer.\n\nJust let us know which you'd like."
+        }
+      ]
+    },
+    {
+      "item": "own-fridge",
+      "run": 2,
+      "urgency": "low",
+      "nextStep": "out_of_scope",
+      "modelUrgency": "low",
+      "modelNextStep": "out_of_scope",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that their own fridge freezer, which they brought with them when they moved in and which is not landlord-supplied, has stopped working and food is defrosting. There is no leak, no electrical smell or other hazard mentioned. The appliance is the tenant's own responsibility, so there is nothing in the property for us to repair; we can still point them towards an appliance repairer or their contents insurance if they ask.",
+      "why": "The appliance is the tenant's own and there is no hazard to the property — the only consequence is spoiling food.",
+      "status": "closed",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 115,
+          "body": "Hi Sam, thanks for getting in touch, and sorry to hear about the food defrosting.\n\nFirst, keep the doors closed as much as you can to hold the cold in, and don't refreeze anything that has fully defrosted — move what you want to save to a cool place or a neighbour's fridge.\n\nBecause this is your own appliance, brought with you and not supplied by the landlord, there's nothing in the home for us to repair, so we'll close this case. If it helps, we can point you towards an appliance repairer, or your contents insurance may cover the lost food — just ask.\n\nIf anything changes in the flat itself, do tell us."
+        }
+      ]
+    },
+    {
+      "item": "smoke-alarm-chirp",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "self_help",
+      "modelUrgency": "low",
+      "modelNextStep": "self_help",
+      "floorOverrode": true,
+      "invalid": false,
+      "summary": "Sam reports the hallway smoke alarm chirping about once a minute, with no smoke or sign of fire, and says it's very annoying. Treated as a low-battery warning: the tenant can fit a fresh battery and test the alarm themselves. If it is a mains-wired unit with a sealed battery, or the chirp continues after a new battery, the alarm is faulty and needs an electrician visit.",
+      "why": "A single chirp each minute with no smoke or heat is the standard low-battery warning, not a fire, and it can be silenced safely without a visit. [safety floor: smoke, sparks or burning smell]",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 119,
+          "body": "Hi Sam,\n\nThanks for reporting this. Please don't take the alarm down or disconnect it — a chirp like that usually just means the battery is nearly flat, and the alarm is still your best warning if a fire did start.\n\nIf it has a battery compartment, fit a fresh battery (or the correct replaceable backup battery), then press and hold the test button until it sounds. That should stop the chirp.\n\nIf it's a mains-wired alarm with a sealed battery, don't open it — let us know and we'll arrange an electrician. Same if the chirp carries on after a new battery: the unit is faulty, so tell us and we'll get an electrician to look at it."
+        }
+      ]
+    },
+    {
+      "item": "smoke-alarm-chirp",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "self_help",
+      "modelUrgency": "medium",
+      "modelNextStep": "self_help",
+      "floorOverrode": true,
+      "invalid": false,
+      "summary": "Sam reports the hallway smoke alarm chirping roughly once a minute, with no smoke or fire. The alarm is part of the flat's fire detection, so it needs to keep working rather than be silenced. Sam has been given guidance to replace the battery if the unit allows it, and to leave a sealed or mains-wired alarm in place and let us know so an electrician can attend.",
+      "why": "The chirp is almost certainly a low-battery warning, so the flat's fire detection will stop working altogether if it is left — a safety device failing rather than a cosmetic nuisance. [safety floor: smoke, sparks or burning smell]",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 89,
+          "body": "Hi Sam,\n\nThanks for reporting this. It sounds like a low battery, but please don’t take the alarm down or disconnect it to stop the chirping — it needs to keep working.\n\nIf the unit has a battery compartment, fit a fresh battery and press the test button to confirm it sounds. If it’s sealed or mains-wired with no battery you can change, leave it in place and let us know, and we will arrange an electrician to attend.\n\nOnce you’ve checked it, please tell us what you find."
+        }
+      ]
+    },
+    {
+      "item": "smoke-alarm-chirp",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "self_help",
+      "modelUrgency": "low",
+      "modelNextStep": "self_help",
+      "floorOverrode": true,
+      "invalid": false,
+      "summary": "Sam reports the hallway smoke alarm chirping about once a minute, with no smoke or sign of fire. The likely cause is a low battery, and the alarm was left in place. Guidance is for the tenant to fit a fresh battery and test the alarm, and to report back if the chirp continues or the unit is a sealed mains type so an engineer can attend.",
+      "why": "A single chirp per minute with no smoke or smell is almost always a low battery, not a fire, and it is something the tenant can safely fix. [safety floor: smoke, sparks or burning smell]",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 95,
+          "body": "Hi Sam,\n\nThanks for reporting this — no smoke or sign of fire is reassuring. The chirp is almost certainly a low battery.\n\nPlease change the battery (usually a 9V or AA behind a flip-down cover) and press the test button to confirm it sounds. Please never take the alarm down or leave it without a working battery.\n\nIf the chirp continues with a fresh battery, or the unit has no battery compartment (a sealed mains unit), stop and let us know so we can send an engineer.\n\nLet us know how you get on."
+        }
+      ]
+    },
+    {
+      "item": "smoking-socket",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Tenant Sam reports the socket behind the TV went bang with a spark, a bit of smoke and a burning smell. Sam switched it off at the wall and unplugged everything, and the smell is now fading. No other sockets or appliances are reported as affected and there is no sign of fire spreading. An electrician needs to inspect the socket and its circuit.",
+      "why": "A socket that sparked, smoked and gave off a burning smell points to a fire risk in the wiring, even though the tenant has isolated it.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 105,
+          "body": "Hi Sam, thanks for letting us know, and well done for switching it off and unplugging everything.\n\nPlease leave that socket switched off at the wall and don't plug anything back into it or the nearby sockets. If you can, turn off the circuit at the fuse box until an electrician has seen it. If the burning smell comes back, or you see smoke or any scorching, leave the flat and call 999.\n\nWe will arrange an electrician to inspect the socket and its circuit, and we will confirm a time with you. Since it's flagged as high urgency, we'll treat it as a priority."
+        }
+      ]
+    },
+    {
+      "item": "smoking-socket",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "The socket behind the TV in Sam's flat went bang with a spark, some smoke and a burning smell. Sam switched it off at the wall, unplugged everything and reports the smell is now fading. The socket is out of use and an electrician needs to inspect the wiring before it is used again.",
+      "why": "A socket sparked, smoked and smelled of burning, which is a fire risk until an electrician has checked the wiring.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 73,
+          "body": "Sam, thank you for switching the socket off at the wall and unplugging everything — that was the right thing to do. Please keep that socket and the nearby ones switched off, and don't plug anything back into them. If you see smoke, flames or hear crackling again, leave the flat and call the emergency number above. We'll arrange for an electrician to inspect the wiring and will confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "smoking-socket",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports the socket behind the TV went bang with a spark, some smoke and a burning smell. Sam switched it off at the wall and unplugged everything, and says the smell is fading. The socket and its wiring need checking by an electrician; the socket is to stay off and unused in the meantime.",
+      "why": "A socket that sparked, smoked and smelled of burning is a fire risk that needs an electrician to check the wiring today.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 87,
+          "body": "Hi Sam, thanks for reporting this, and for switching it off and unplugging everything — that was the right thing to do.\n\nPlease leave that socket switched off with nothing plugged into it, and don't use any nearby sockets on the same wall. If the burning smell comes back, the socket gets hot or discoloured, or you see any smoke, leave the flat and call the fire service.\n\nWe'll arrange for an electrician to check the socket and its wiring, and we'll confirm a time with you."
+        }
+      ]
+    },
+    {
+      "item": "two-problems",
+      "run": 0,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports two problems: the kitchen tap drips constantly, and the catch on the living room window has snapped so it will not lock. The flat is on the ground floor, so the window cannot be secured. A contractor needs to visit to repair the tap and the window catch.",
+      "why": "The living room window cannot be locked and the flat is on the ground floor, which is a security risk that needs fixing today.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 62,
+          "body": "Hi Sam, thanks for reporting this. While you wait, please keep the window closed and the room as secure as you can. If the tap drip gets worse, turn off the isolation valve under the sink.\n\nWe'll arrange a tradesperson to repair both the tap and the window catch, and confirm a time with you.\n\nWe'll be in touch once that's arranged."
+        }
+      ]
+    },
+    {
+      "item": "two-problems",
+      "run": 1,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports two faults: a kitchen tap that drips constantly, and a snapped catch on the living room window so it will not lock. The flat is on the ground floor, so the unsecured window is a security risk and needs a tradesperson today. The drip is a contained leak that should be repaired on the same visit.",
+      "why": "A ground-floor window that cannot be locked leaves the flat open to intruders and must be made secure today, alongside the dripping kitchen tap.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 98,
+          "body": "Hi Sam,\n\nThanks for reporting this. While the window catch is broken, please keep the living room window closed and wedge or block it shut if you can, and try not to leave the flat unattended with it unsecured. Please don't try to force or tape the broken catch.\n\nBecause the flat is on the ground floor, we're treating the window as urgent. We'll arrange a tradesperson to come and fix the catch, and they'll look at the dripping kitchen tap on the same visit. We'll be in touch to confirm a time.\n\nThanks for bearing with us."
+        }
+      ]
+    },
+    {
+      "item": "two-problems",
+      "run": 2,
+      "urgency": "high",
+      "nextStep": "contractor",
+      "modelUrgency": "high",
+      "modelNextStep": "contractor",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports two faults: a kitchen tap that drips constantly, and a snapped catch on the living room window so it won't lock. The flat is on the ground floor, so the unsecured window is a security risk. A contractor needs to attend to repair the window catch and the tap.",
+      "why": "A ground-floor living room window that cannot be locked leaves the flat insecure and must be fixed today or first thing tomorrow, alongside the dripping tap.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 61,
+          "body": "Hi Sam,\n\nThanks for reporting both faults. We understand the window catch not locking on the ground floor is a security concern, and the dripping tap needs fixing too.\n\nWe will arrange a contractor to repair the window catch and the kitchen tap, and we will confirm a time with you.\n\nWe do not have any questions for you just now."
+        }
+      ]
+    },
+    {
+      "item": "vague-boiler",
+      "run": 0,
+      "urgency": "medium",
+      "nextStep": "need_info",
+      "modelUrgency": "medium",
+      "modelNextStep": "need_info",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reported that something is wrong with the boiler and asked for someone to look at it, without describing the symptom. No gas smell, leak or loss of heating or hot water has been mentioned so far. We have asked what the boiler is doing, whether there is any gas smell, soot or water escaping, and whether the flat currently has heating and hot water.",
+      "why": "A boiler fault is a real repair that will not fix itself, but no gas smell, leak or total loss of heating has been reported yet, so the hazard is unclear.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 102,
+          "body": "Hi Sam,\n\nIf water is leaking from the boiler, please turn it off at the wall and put a container or towel underneath.\n\nThanks for reporting this. We can arrange for someone to look at it once we know what is happening. Please answer these so we can decide the next step:\n\nWhat exactly is happening — no heating, no hot water, a leak, or an error code on the display?\nIs there any smell of gas, soot, or water escaping from the boiler?\nIs the flat currently without heating or hot water?\n\nOnce you reply, we will come back to you."
+        }
+      ]
+    },
+    {
+      "item": "vague-boiler",
+      "run": 1,
+      "urgency": "medium",
+      "nextStep": "need_info",
+      "modelUrgency": "medium",
+      "modelNextStep": "need_info",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam reports that something is wrong with the boiler and asks for someone to look at it, without saying what the fault is. No gas smell, smoke, leak or loss of heating or hot water has been mentioned, so the boiler is treated as a medium-priority repair for now. Sam has been asked what the boiler is doing, whether heating and hot water still work, and whether there is any smell of gas, burning or soot. No visit has been arranged yet.",
+      "why": "A faulty boiler is a real fault that needs attention, but nothing reported so far points to gas, smoke or a loss of heating in cold weather.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 106,
+          "body": "Hi Sam,\n\nIf water is leaking from the boiler, turn it off at the fuse box if it's safe to reach. If you smell gas, leave the flat and use the emergency number above.\n\nWe'd like to get someone to look at it, but first we need a bit more detail:\n\n- What is the boiler actually doing — any error code, noise, leak, or is it just not firing up?\n- Do you still have heating and hot water?\n- Is there any smell of gas, burning, or soot around the boiler?\n\nOnce you've answered, we'll decide the next step and come back to you."
+        }
+      ]
+    },
+    {
+      "item": "vague-boiler",
+      "run": 2,
+      "urgency": "medium",
+      "nextStep": "need_info",
+      "modelUrgency": "medium",
+      "modelNextStep": "need_info",
+      "floorOverrode": false,
+      "invalid": false,
+      "summary": "Sam the tenant reports that something is wrong with the boiler and has asked for someone to look at it. No detail has been given yet on what the fault is, whether heating or hot water has failed, or whether there is any leak, smell or other hazard. Asked Sam what exactly is happening, whether there is any gas or burning smell or smoke, and whether any water is escaping.",
+      "why": "A boiler fault is a real fault that will worsen if left, but the message doesn't yet say whether it's a loss of heating or hot water, a leak, or a gas or burning smell that would make it an emergency.",
+      "status": "open",
+      "speak": [
+        "tenant"
+      ],
+      "replies": [
+        {
+          "to": "tenant:eval",
+          "role": "tenant",
+          "reasons": [
+            "new_case",
+            "asked"
+          ],
+          "source": "model",
+          "claim": false,
+          "safetyExpected": false,
+          "safetyPresent": false,
+          "words": 113,
+          "body": "Hi Sam,\n\nIf you see water leaking from the boiler, switch it off and put a towel or bowl underneath, and avoid the area near any electrics.\n\nThanks for letting us know. We need a bit more detail before we can decide the right next step. Please reply with:\n\n- What exactly is happening — no heating, no hot water, an error code, a noise, or a leak?\n- Is there any smell of gas or burning, or any smoke?\n- Is there any water coming from the boiler or nearby pipework, and is it reaching the floor or the flat below?\n\nOnce we have your answers, we will confirm what happens next."
+        }
+      ]
+    }
+  ]
+}

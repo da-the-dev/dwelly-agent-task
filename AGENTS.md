@@ -12,7 +12,7 @@ Dwelly manages rented homes. Build a service that does the property manager's wo
 
 It is a ladder. A working lower rung with tests and traces is worth more than a higher rung held together with tape.
 
-**Current rung: 5 (keep the tenant and the landlord informed), merged 16 Nov, tag `v0.6`. Rung 4 is not started.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`), plus the `POST`/`PATCH /cases` calls it needs and one `msg_send` for each person to tell (`src/agent/speak.ts`, text by `src/agent/reply.ts`). All of them go into the outbox and are sent after each batch (`src/agent/sender.ts`). Next: the `gas-update` fix (an open emergency answers every tenant message), then rung 4 (contractor and work order).
+**Current rung: 5 (keep the tenant and the landlord informed), merged 16 Nov, tag `v0.6`. Rung 4 is not started.** Every `message.received` becomes a version of our own case (`src/agent/handle.ts`), plus the `POST`/`PATCH /cases` calls it needs and one `msg_send` for each person to tell (`src/agent/speak.ts`, text by `src/agent/reply.ts`). All of them go into the outbox and are sent after each batch (`src/agent/sender.ts`). Review fixes of 16 Nov (branch `review-fixes`): `needs_review` is set by the agent and cleared only by a person; the loop guard keeps stopped messages as `held`; an open emergency answers every tenant message (`open_emergency`, `reply.v3`). Next: Phase 2 (`docs/phase2-perception-plan.md`: perception from regex to model fields), then rung 4.
 
 ## Sources of truth
 - `spec/openapi.json`: the API. The world validates requests with it. Do not guess fields; read the spec.
@@ -36,7 +36,7 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `src/agent/loop.ts`: transactional inbox. Fetch, then store the batch and the cursor in one transaction, then handle pending events. Delivery is at-least-once, so **every handler that changes the world must be idempotent**.
 - `src/store/`: state goes only through the async `Store` interface. SQL must run on SQLite and Postgres both.
 - `src/trace.ts`: every decision is one `tracer.trace(kind, {...})` line with the `event_id` it belongs to.
-- `src/agent/handle.ts`: the handler the loop calls per event. A message → find its case (payload case ref, else the open case at the property, else new) → `decide` (with the role guard) → `speakFor` and the loop guard → the writer → save the version and its outbox actions, messages first → trace `case.version` and `action.queued`. A landlord or contractor message with no case opens nothing (`message.unlinked`). A tenant message within 72 h of their case closing joins that case. An event that already produced a version is skipped before the LLM call (at-least-once delivery).
+- `src/agent/handle.ts`: the handler the loop calls per event. A message → find its case (payload case ref, else the open case at the property, else new) → `decide` (with the role guard) → `speakFor` and the loop guard → the writer → save the version and its outbox actions, messages first → trace `case.version` and `action.queued`. A landlord or contractor message with no case opens nothing (`message.unlinked`). A tenant message within 72 h of their case closing (counted from the close) joins that case. The loop guard keeps a stopped message as a `held` action, never sent. An event that already produced a version is skipped before the LLM call (at-least-once delivery).
 - `src/agent/actions.ts` + `actions` table: rung 3's outbox. `actionsFor(prev, next)` (pure) decides the calls; the handler saves them in the same transaction as the version. Never call a world-changing endpoint from the handler.
 - `src/agent/sender.ts`: drains the outbox after each batch. Marks `sending` before the call. A POST that may have happened (timeout, network, 5xx) is `unknown` and is never sent again; a PATCH is retried. 429 pauses, 403 stops sending.
 - `src/agent/decide.ts`: rung 2's decision for one message: classify (one LLM call) → safety floor → state. It takes the case's latest version and returns the next one; the caller saves it.
@@ -61,6 +61,7 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - Use the spec types from `src/api/types.ts`. Do not write your own copies of API shapes.
 - LLM calls go through `src/llm.ts` (OpenRouter, plain `fetch`). The model comes from config (`LLM_MODEL`); never hard-code one elsewhere. The provider is pinned (`LLM_PROVIDERS`, default `deepinfra/fp8`) so runs are comparable. Unit tests use a fake `fetch`; only `npm run llm:smoke` and evals call the real API, because they cost money.
 - No `any`. At a trust boundary (an API response, an LLM output) use `unknown` and validate it.
+- No regex on what people wrote (DECISIONS.md, regex policy). The model reports structured fields; code applies fixed rules to them. A pattern may check the format of our own output only.
 
 ## Working rules
 - Each rung gets a test. A bug found in a live run becomes a test or an eval case before it is fixed.

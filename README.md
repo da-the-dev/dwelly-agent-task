@@ -2,7 +2,7 @@
 
 This service does the work of a property manager on a home repair at Dwelly. It reads the messages from tenants and landlords. It decides how urgent each problem is and what happens next. It opens and updates a maintenance case in Dwelly. It writes to the tenant and to the landlord. It was built for the Dwelly AI build session.
 
-**Status, 16 Nov 2026: rungs 1, 2, 3 and 5 are built. Rung 4 is not started.** Tag: `v0.6`.
+**Status, 16 Nov 2026: rungs 1, 2, 3 and 5 are built. Rung 4 is not started.** Tag: `v0.6`. The branch `review-fixes` has the fixes from two outside reviews (experiment 005).
 
 ## What the agent does
 The task is a ladder of 5 rungs. Each rung that is built has tests and traces.
@@ -16,17 +16,20 @@ The task is a ladder of 5 rungs. Each rung that is built has tests and traces.
 | 5 | Write to the tenant, and to a landlord who asks a question. | built |
 
 Rung 5 in more detail:
-- A second LLM call writes each message (prompt `prompts/reply.v2.md`).
+- A second LLM call writes each message (prompt `prompts/reply.v3.md`).
 - Code puts the safety line at the start of every tenant message in an open emergency: "If anyone is in danger, get to a safe place and call 999 now." The number comes from `EMERGENCY_NUMBER` (default `999`).
 - The agent writes only when there is something new to say. A "thanks" that changes nothing gets no answer.
 - A landlord or a contractor cannot lower the urgency or move the case (the role guard).
-- After 5 messages in a row to one person with no change in the case, the agent stops and marks the case for review (the loop guard).
+- After 5 messages in a row to one person with no change in the case, the agent stops and marks the case for review (the loop guard). Each stopped message is kept as `held` and is never sent.
 - If the writer fails, a plain template message goes instead. A message is never lost.
+- In an open emergency, every message from the tenant gets an answer, with the safety line first.
+- A case marked for review (`needs_review`) stays marked until a person clears it.
 
-Known gaps (see `experiments/004-reply-v2-no-claims-in-progress.md`):
-- In an open emergency, a tenant update with no question and no change gets no answer (`gas-update`, 0/3). This is the next fix.
+Known gaps (see `experiments/005-review-fixes.md` and `docs/phase2-perception-plan.md`):
+- The safety floor, "they asked us something" (a `?`) and the new-question check read free text with patterns, and simple rewording breaks them. For example, "smoke alarm … no smoke" becomes high, and "the gas smell has gone" stays an emergency. Phase 2 moves these to fields that the model reports.
+- A tenant's message joins the open case at the property, or a case closed less than 72 h ago, whatever it is about. Phase 2 adds a `same_problem` field.
 - Some messages to cases that are not emergencies say "the emergency number above", and there is no number above.
-- Some messages end with a sign-off ("Thanks, Dwelly"), although the prompt forbids it: 5 of 120 in experiment 004.
+- Some messages end with a sign-off ("Thanks, Dwelly"), although the prompt forbids it: 2 of 123 in experiment 005.
 - The payload field names in `src/agent/message.ts` are not confirmed against the live world yet.
 
 ## Run
@@ -113,7 +116,7 @@ Run and Debug (⇧⌘D) has these configurations (`.vscode/launch.json`). Put br
 | `src/agent/sender.ts` | Sends the outbox after each batch. 429 pauses and 403 stops. Messages never wait for case actions. |
 | `src/agent/message.ts` | The payload adapter: the only code that knows the field names of an event. |
 | `src/case.ts` | Our case model. A case changes as versions (`cases` and `case_versions`). |
-| `prompts/` | One file for each prompt version. Current: `classify.v2.md`, `reply.v2.md`. |
+| `prompts/` | One file for each prompt version. Current: `classify.v2.md`, `reply.v3.md`. |
 | `src/tools/` | `npm run` tools: `eval`, `try:classify`, `prompts`, `story`, `e2e`, `llm:smoke`. |
 | `src/eval/`, `evals/` | The eval sets, the scoring and the committed reports. |
 | `src/e2e/`, `e2e/runs/` | The checks for `npm run e2e`, and its reports. |
