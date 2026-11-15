@@ -98,6 +98,7 @@ The user's choice: a trace viewer for themselves, and a prompt store that is eas
 
 ## Later: from the outside review (15 Nov), to circle back to
 Parked by the user on 15 Nov. None of these blocks rungs 4 and 5.
+- **Phase 2: perception from regex to the model** (two outside reviews, 16 Nov): the floor, `asks()`, the new-question check and the claim check break on simple rewording. The plan is in `docs/phase2-perception-plan.md`. It starts after the live session.
 - **`/regress` command** (review C1): a `.claude/commands/` command that takes an `event_id` from a trace, writes it as an eval item, shows it fail, then the fix and a pass. It shows the harness, and it makes the live "turn a failure into a check" step faster.
 - **Fake world answers** (review C2): one answer for each message we send. This is step 4 of the rung 5 plan in the diagram, so it may come back with rung 5.
 - **Say it before they ask**: `cases.json` measures fit, not generalisation. The held-out items are the 6 tone flips and, since 15 Nov, the 20 scenarios (see "Scenario set" above).
