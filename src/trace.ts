@@ -20,7 +20,9 @@ export function createTracer(runId: string, ...sinks: TraceSink[]): Tracer {
   return {
     runId,
     trace(kind, data = {}) {
-      const line = JSON.stringify({ ts: new Date().toISOString(), run: runId, kind, ...data });
+      // ts, run and kind always win: a data field with one of those names must not hide them.
+      const own = { ts: new Date().toISOString(), run: runId, kind };
+      const line = JSON.stringify({ ...own, ...data, ...own });
       for (const sink of sinks) sink(line);
     },
   };
