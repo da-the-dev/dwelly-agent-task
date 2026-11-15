@@ -1,0 +1,29 @@
+{
+  "_about": "The eval set for rung 2 (npm run eval). Each item is one message, or an archive thread replayed up to a message, and the answers we accept for the LAST step. Archive items: urgency is the archive's label, except where the first message alone cannot know it (case-04); next_step is what the manager did first (hand labels in ../dwelly-history-eda/annotations.json), plus any step a good manager could defend. Variants are hand-written tone flips of archive cases: the tone must not move the urgency. An item whose lowest accepted urgency is high or emergency is critical: rating it lower is a hard fail.",
+  "items": [
+    { "id": "case-01", "archive": "case-01", "expect": { "urgency": ["emergency"], "next_step": ["contractor"] }, "why": "water through a ceiling light: water + electrics" },
+    { "id": "case-02", "archive": "case-02", "expect": { "urgency": ["medium"], "next_step": ["contractor", "need_info"] }, "why": "a steady drip: a fault that gets worse" },
+    { "id": "case-03", "archive": "case-03", "expect": { "urgency": ["low"], "next_step": ["need_info", "log_only"] }, "why": "cosmetic; photos first to rule out structure" },
+    { "id": "case-04", "archive": "case-04", "expect": { "urgency": ["medium", "high"], "next_step": ["need_info", "contractor"] }, "why": "'no rush' leak; the manager first said medium (high came with messages[6])" },
+    { "id": "case-05", "archive": "case-05", "expect": { "urgency": ["emergency"], "next_step": ["external"] }, "why": "gas: the emergency line, no work order" },
+    { "id": "case-06", "archive": "case-06", "expect": { "urgency": ["high"], "next_step": ["contractor"] }, "why": "no heating or hot water in freezing weather" },
+    { "id": "case-07", "archive": "case-07", "expect": { "urgency": ["medium"], "next_step": ["contractor"] }, "why": "dead fan in a windowless bathroom" },
+    { "id": "case-08", "archive": "case-08", "expect": { "urgency": ["high"], "next_step": ["contractor"] }, "why": "flicker + trips + hot smell: fire risk, even with the circuit off" },
+    { "id": "case-09", "archive": "case-09", "expect": { "urgency": ["medium"], "next_step": ["contractor"] }, "why": "one dead socket; electrical is not high by itself" },
+    { "id": "case-10", "archive": "case-10", "expect": { "urgency": ["medium"], "next_step": ["contractor"] }, "why": "slow drain with standing water" },
+    { "id": "case-11", "archive": "case-11", "expect": { "urgency": ["low"], "next_step": ["need_info", "out_of_scope"] }, "why": "neighbour noise: not a repair, however upset the tenant is" },
+    { "id": "case-12", "archive": "case-12", "expect": { "urgency": ["high"], "next_step": ["contractor"] }, "why": "ground-floor window will not lock: home not secure" },
+    { "id": "case-13", "archive": "case-13", "expect": { "urgency": ["medium"], "next_step": ["need_info", "contractor"] }, "why": "recurring mould: rule out a leak before calling it condensation" },
+    { "id": "case-14", "archive": "case-14", "expect": { "urgency": ["low"], "next_step": ["self_help", "need_info"] }, "why": "radiator cold at the top: bleed it" },
+    { "id": "case-15", "archive": "case-15", "expect": { "urgency": ["medium"], "next_step": ["contractor"] }, "why": "supplied washing machine leaks: the landlord's to fix" },
+
+    { "id": "case-04@6", "archive": "case-04", "upTo": 6, "expect": { "urgency": ["high"], "next_step": ["contractor"] }, "why": "the turning point: water has reached the flat below" },
+
+    { "id": "calm-gas", "text": "Hi, not urgent at all, whenever you get a chance. Since this morning there's been a faint smell like rotten eggs near the boiler cupboard. Probably nothing, just thought I'd mention it.", "expect": { "urgency": ["emergency"], "next_step": ["external"] }, "why": "tone flip of case-05" },
+    { "id": "calm-water-light", "text": "Small thing, no rush: a bit of water drips out of the bathroom light fitting when the upstairs shower is running. It stops after a while.", "expect": { "urgency": ["emergency"], "next_step": ["contractor"] }, "why": "tone flip of case-01" },
+    { "id": "calm-no-heat-cold", "text": "No big deal, but the boiler stopped overnight, so we have no heating or hot water. It's minus 3 outside. We'll manage with jumpers for now.", "expect": { "urgency": ["high"], "next_step": ["contractor"] }, "why": "tone flip of case-06" },
+    { "id": "calm-door-lock", "text": "Not a rush, but the front door lock won't lock any more - the key just spins. I'm away from tomorrow for a week.", "expect": { "urgency": ["high"], "next_step": ["contractor"] }, "why": "tone flip of case-12" },
+    { "id": "panicky-drip", "text": "PLEASE HELP!!! The kitchen tap will not stop dripping, it's driving me crazy, I can't sleep, this is a total nightmare, I need someone TODAY!!!", "expect": { "urgency": ["low", "medium"], "next_step": ["contractor", "need_info", "self_help"] }, "why": "tone flip of case-02: panic must not make it high" },
+    { "id": "panicky-scuff", "text": "I'm so upset!!! The sofa delivery left a huge black scuff all along the hallway wall. It looks awful. Who is going to fix this?!", "expect": { "urgency": ["low"], "next_step": ["log_only", "need_info", "self_help", "out_of_scope"] }, "why": "tone flip of case-03: cosmetic stays low" }
+  ]
+}

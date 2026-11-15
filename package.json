@@ -18,6 +18,7 @@
     "fetch:spec": "curl -fsS https://167.172.96.156.sslip.io/openapi.json -o spec/openapi.json && curl -fsS https://167.172.96.156.sslip.io/history.json -o data/history.json",
     "llm:smoke": "npm run -s build && node --env-file=.env dist/tools/llm-smoke.js",
     "try:classify": "npm run -s build && node --env-file=.env dist/tools/try-classify.js",
+    "eval": "npm run -s build && node --env-file=.env dist/tools/eval.js",
     "start:fake": "env -u DWELLY_BASE_URL -u DWELLY_TOKEN -u STATE_DB node --env-file=.env --env-file=.env.fake dist/main.js"
   },
   "devDependencies": {

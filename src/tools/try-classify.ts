@@ -7,18 +7,17 @@
 //                                                    each one seeing the state the last left
 // Writes the llm.call traces to traces/try-<time>.jsonl and prints one block per step.
 import { readFileSync } from "node:fs";
-import type { HistoryCase, HistoryCasesResponse } from "../api/types.js";
 import type { CaseRecord } from "../case.js";
 import { loadConfig } from "../config.js";
 import { CLASSIFY_PROMPT, loadPrompt } from "../agent/classify.js";
 import { decide } from "../agent/decide.js";
-import type { IncomingMessage } from "../agent/message.js";
+import { archiveMessage, loadArchive, threadUpTo } from "../eval/set.js";
 import { createTracer, fileSink } from "../trace.js";
 
 const config = loadConfig();
 if (!config.llm.apiKey) throw new Error("OPENROUTER_API_KEY is not set in .env");
 
-const archive = (JSON.parse(readFileSync("data/history.json", "utf8")) as HistoryCasesResponse).cases;
+const archive = loadArchive();
 const runId = `try-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const tracePath = `traces/${runId}.jsonl`;
 const tracer = createTracer(runId, fileSink(tracePath));
@@ -44,15 +43,7 @@ for (const spec of specs) {
   for (const i of steps) {
     const m = c.messages[i];
     if (!m) continue;
-    const message: IncomingMessage = {
-      eventId: `${c.id}#${i}`,
-      text: m.body,
-      subject: null,
-      actor: { id: `${m.from}:${m.name}`, role: m.from, name: m.name },
-      propertyId: c.property.id,
-      caseRef: null,
-      occurredAt: m.sent_at,
-    };
+    const message = archiveMessage(c, i);
     const r = await decide(deps, current, message, m.sent_at, () => `try_${c.id}`);
     current = r.next;
     const n = r.next;
@@ -74,8 +65,3 @@ const calls = readFileSync(tracePath, "utf8").trim().split("\n").map((l) => JSON
 const cost = calls.reduce((s, l) => s + (l.cost_usd ?? 0), 0);
 const served = [...new Set(calls.map((l) => l.provider))].join(", ");
 console.log(`${calls.length} LLM calls via ${served}, $${cost.toFixed(5)}, avg ${Math.round(calls.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / calls.length)} ms`);
-
-/** Indices of every message not written by the manager, up to and including `last`. */
-function threadUpTo(c: HistoryCase, last: number): number[] {
-  return c.messages.flatMap((m, i) => (i <= last && m.from !== "manager" ? [i] : []));
-}
