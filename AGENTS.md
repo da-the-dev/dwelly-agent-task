@@ -43,11 +43,14 @@ It is a ladder. A working lower rung with tests and traces is worth more than a 
 - `src/case.ts` + `cases` / `case_versions`: a case evolves as versions. The classifier sees only the latest version and the new message (Markov), so the `summary` must carry what matters. Never add a column to `cases` without adding it to `case_versions`.
 - `src/agent/floor.ts`: the safety floor is code, not prompt. The model may raise urgency above it, never lower it. A new hazard rule needs an archive or trap test in `test/floor.test.ts`.
 - `src/agent/message.ts`: the only code that knows the payload's field names.
-- `prompts/`: one file per prompt version. Change a prompt by adding a new version file and switching `CLASSIFY_PROMPT`; keep the old one so runs can be compared.
+- `prompts/`: one file per prompt version; the agent reads only these. Prompts are edited in Langfuse: `npm run prompts -- pull classify` writes `prompts/classify.vN.md` (Langfuse version N = file vN), then switch `CLASSIFY_PROMPT`, run `npm run eval`, commit. A file written by hand goes up with `npm run prompts -- push classify.vN`. Keep old versions so runs can be compared.
+- `src/trace-langfuse.ts`: a second trace sink that sends every trace line to Langfuse (one trace per event, session = case). A viewer only: the JSONL file is the record, and a Langfuse failure must never stop the agent. Off without `LANGFUSE_*` keys or with `LANGFUSE_TRACES=off`.
 
 ## Running
 - Evals (cost money, ~$0.012 a full run): `npm run eval`. Options: `--runs 1 --only case-05,calm-gas`, `--prompt classify.v1`, `LLM_MODEL=... LLM_PROVIDERS=any`. Read the table, then commit the report in `evals/runs/`. Change the prompt or the model only with an eval run before and after. A bug found live becomes an item in `evals/cases.json`.
 - Classifier on real archive cases, to read the full output by eye: `npm run try:classify -- case-05 case-04@6` (`@6` replays the thread up to `messages[6]`).
+- Prompts: `npm run prompts -- status` (files vs Langfuse), `pull classify [--version N]`, `push classify.vN [--label production]`.
+- Traces in Langfuse (https://cloud.langfuse.com): filter by environment `agent-fake`, `agent-live`, `eval` or `try`; a session is one case.
 - Unit tests: `npm test`. End to end: start `../dwelly-fake-world` (`npm run dev` there), then `npm run build && npm run start:fake` here. Inspect `traces/*.jsonl` and `state/fake.db`. The 15 archive openers in ~15 s: `SCENARIO=archive SPEED=20 node dist/main.js` in the fake world; its `GET /_admin/state` lists the cases it received.
 
 ## Stack rules
