@@ -19,7 +19,7 @@ import { decide } from "./decide.js";
 import type { EventHandler } from "./loop.js";
 import { readMessage } from "./message.js";
 import { writeReply, type WriterDeps } from "./reply.js";
-import { LOOP_LIMIT, looping, speakFor, type PastTurn } from "./speak.js";
+import { isClosed, LOOP_LIMIT, looping, speakFor, type PastTurn } from "./speak.js";
 
 export interface HandlerDeps {
   store: Store;
@@ -32,7 +32,14 @@ export interface HandlerDeps {
   now?: () => string;
 }
 
-type LinkedBy = "case_ref" | "open_case_at_property" | "new";
+type LinkedBy = "case_ref" | "open_case_at_property" | "recent_closed_case" | "new";
+
+/**
+ * A tenant who writes within this time after their case closed is answering us (rung 5:
+ * every message we send gets an answer), not reporting a new problem. Without this, each
+ * answer to a close note opened a new case, which got a message, which got an answer...
+ */
+export const REOPEN_WINDOW_MS = 72 * 3600_000;
 
 export function createHandler(deps: HandlerDeps): EventHandler {
   const { store, tracer } = deps;
@@ -63,6 +70,13 @@ export function createHandler(deps: HandlerDeps): EventHandler {
     if (!current && propertyId) {
       current = await store.findOpenCase(propertyId);
       if (current) linkedBy = "open_case_at_property";
+    }
+    if (!current && propertyId && message.actor.role === "tenant") {
+      const latest = await store.findLatestCase(propertyId, message.actor.id);
+      if (latest && isClosed(latest) && Date.parse(now()) - Date.parse(latest.updatedAt) <= REOPEN_WINDOW_MS) {
+        current = latest;
+        linkedBy = "recent_closed_case";
+      }
     }
     // Role guard: only a tenant reports a new problem. A landlord or contractor message we
     // cannot place must not open a case (POST /cases would tell the landlord about it).

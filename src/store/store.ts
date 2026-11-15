@@ -33,6 +33,8 @@ export interface Store {
   getCase(id: string): Promise<CaseRecord | null>;
   /** The most recently updated case at this property that is not resolved or closed. */
   findOpenCase(propertyId: string): Promise<CaseRecord | null>;
+  /** The most recently updated case this actor reported at this property, in any status. */
+  findLatestCase(propertyId: string, reporter: string): Promise<CaseRecord | null>;
   /** Our case for a Dwelly case id (set once rung 3 has created it). */
   findCaseByDwellyId(dwellyCaseId: string): Promise<CaseRecord | null>;
   /** The case this cause (e.g. an event id) already produced a version of, if any. */

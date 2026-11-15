@@ -102,6 +102,7 @@ export function openSqliteStore(path: string): Store {
   );
   const getActor = db.prepare("SELECT id, role, name, property_id FROM actors WHERE id = ?");
   const getCase = db.prepare("SELECT * FROM cases WHERE id = ?");
+  const findLatestCase = db.prepare("SELECT * FROM cases WHERE property_id = ? AND reporter = ? ORDER BY updated_at DESC LIMIT 1");
   const findOpenCase = db.prepare(
     `SELECT * FROM cases WHERE property_id = ? AND status NOT IN ('resolved', 'closed')
      ORDER BY updated_at DESC LIMIT 1`,
@@ -202,6 +203,10 @@ export function openSqliteStore(path: string): Store {
     },
     async findOpenCase(propertyId: string) {
       const r = findOpenCase.get(propertyId) as Row | undefined;
+      return r ? toCase(r, Number(r["version"])) : null;
+    },
+    async findLatestCase(propertyId: string, reporter: string) {
+      const r = findLatestCase.get(propertyId, reporter) as Row | undefined;
       return r ? toCase(r, Number(r["version"])) : null;
     },
     async findCaseByDwellyId(dwellyCaseId: string) {

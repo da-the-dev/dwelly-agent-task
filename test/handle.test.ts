@@ -227,4 +227,42 @@ describe("rung 5: messages from the handler", () => {
     expect(t.writes()).toBe(1);
     expect((await t.store.pendingActions(10)).map((a) => a.kind)).toEqual(["msg_send", "case_open", "case_patch"]);
   });
+
+  it("an answer to a closed case joins that case: no new case, and a 'thanks' gets no message", async () => {
+    const t = setup([answer({ urgency: "low", next_step: "out_of_scope" }), answer({ urgency: "low", next_step: "out_of_scope" })]);
+    await t.handle(message("evt_1", "the neighbours upstairs are stomping at 2am"));
+    await t.handle(message("evt_2", "Thanks, will do."));
+    expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => [l["linked_by"], l["version"]])).toEqual([
+      ["new", 1], ["recent_closed_case", 2],
+    ]);
+    expect(t.queued("msg_send")).toHaveLength(1);
+    expect(t.queued("case_open")).toHaveLength(1);
+  });
+
+  it("after the window a tenant's message is a new report again", async () => {
+    let now = "2026-11-11T17:05:00.000Z";
+    const t = setup([answer({ urgency: "low", next_step: "log_only" }), answer({})]);
+    const store = t.store;
+    const handle = createHandler({
+      store,
+      tracer: createTracer("t2", (l) => t.lines.push(JSON.parse(l))),
+      classify: { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(CLASSIFY_PROMPT), tracer: createTracer("x", () => {}), fetchImpl: fakeLlm([answer({})]) },
+      writer: { llm: { apiKey: "k", model: "m" }, prompt: loadPrompt(REPLY_PROMPT), tracer: createTracer("x", () => {}), fetchImpl: fakeLlm([JSON.stringify({ body: "ok" })]), emergencyNumber: "999" },
+      openCaseOutOfScope: true,
+      now: () => now,
+    });
+    await t.handle(message("evt_1", "a small scuff on the hallway wall"));
+    now = "2026-11-15T17:05:00.000Z"; // four days later
+    await handle(message("evt_2", "the bathroom tap now drips"));
+    expect(t.lines.filter((l) => l["kind"] === "case.version").map((l) => l["linked_by"])).toEqual(["new", "new"]);
+  });
 });
+
+/** A fake OpenRouter that always answers with the same content. */
+function fakeLlm(contents: string[]): typeof fetch {
+  return (async () =>
+    new Response(
+      JSON.stringify({ id: "g", model: "m", provider: "P", choices: [{ message: { content: contents[0] ?? "" }, finish_reason: "stop" }], usage: {} }),
+      { status: 200 },
+    )) as unknown as typeof fetch;
+}
