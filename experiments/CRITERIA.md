@@ -42,7 +42,7 @@ Rates are over all runs of the set, not over items.
 | T2 | Next step in the accepted set | at least 90 % | `next_step` line |
 | T3 | Case status after the last turn, for items that expect one | at least 95 % | `status` line |
 | T4 | The exact set of people who get a message, for items that expect one | at least 95 % | `speak` line |
-| T5 | Claims that are not help claims | 0 | A person reads the replies. Not automated yet. |
+| T5 | Claims that are not help claims | 0 | The `claims` count also finds "we're checking / asking / contacting" (since `ca89913`). A person reads each hit, and sorts it into H3, T5 or not a claim. |
 | T6 | Replies with a sign-off ("Thanks, Dwelly", "Kind regards") | 0 | A search of the reply bodies. Not automated yet. The prompt forbids sign-offs. |
 | T7 | Template fallbacks; invalid model outputs | at most 5 %; at most 2 % | `replies … fell back`; `invalid` line |
 | T8 | Reply length | median at most 150 words | `length` line |
@@ -74,3 +74,4 @@ An experiment that breaks one of these rules gets the verdict INVALID, and its n
 
 ## Change log
 - v1, 15 Nov 2026: first version, written after experiments 001–003 had already run. The write-ups apply it to them afterwards.
+- v1, 15 Nov 2026 (measurement only, the criteria did not change): T5 is now partly automated. `REPLY_CLAIM` counts an action in progress ("we're checking…"). Experiment 004 scores the v1 replies of 001 and 003 again with it.

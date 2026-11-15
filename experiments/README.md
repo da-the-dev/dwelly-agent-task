@@ -23,5 +23,6 @@ A fix gets its own experiment: a run before the fix (usually the last write-up),
 | [001](001-cases-reply-v1.md) | 15 Nov 18:10 | Archive set with the first writer | `cases` (fit) | v1 | BELOW TARGET | T6 sign-offs 5/72 |
 | [002](002-fake-world-rung5.md) | 15 Nov 21:57 | End-to-end run on the fake world, rung 5 | fake world `rung5` | v1 | BELOW TARGET | T4 who gets a message 8/9 |
 | [003](003-scenarios-baseline.md) | 15 Nov 22:24 | Scenario set, held-out baseline | `scenarios` (held out) | v1 | BELOW TARGET | T4 21/24, T5 1 claim, T6 sign-offs 2/48 |
+| [004](004-reply-v2-no-claims-in-progress.md) | 15 Nov 23:03 | `reply.v2`: no "we're checking" (kept) | `scenarios` + `cases` | v1 | BELOW TARGET | `scenarios`: T4 21/24 (T5 now 0); `cases`: T6 5/72 |
 
-There are no hard failures in 001–003. The earlier classify-only runs (11–15 Nov, before rung 5) are in `evals/runs/` and in `DECISIONS.md`. They have no write-up, because criteria v1 checks the replies too.
+There are no hard failures in 001–004. The earlier classify-only runs (11–15 Nov, before rung 5) are in `evals/runs/` and in `DECISIONS.md`. They have no write-up, because criteria v1 checks the replies too.
